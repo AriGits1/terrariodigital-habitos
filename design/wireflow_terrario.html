@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Terrario Digital — Wireflow de Pantallas</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --g1:#1A5C38;--g2:#2E7D52;--g3:#52B788;--gl:#D8F3DC;
+  --b1:#1E3A5F;--b2:#2563EB;--bl:#DBEAFE;
+  --p1:#5B21B6;--pl:#EDE9FE;
+  --o1:#D35400;--ol:#FEF3C7;
+  --n1:#111827;--n2:#374151;--n3:#6B7280;--n4:#D1D5DB;--n5:#F9FAFB;
+  --wh:#FFFFFF;
+  --ph-w:190px;--ph-h:400px;
+  --ph-frame:#1C1C1E;--ph-screen:#FAFAFA;
+}
+body{
+  font-family:'Plus Jakarta Sans',sans-serif;
+  background:#F0F2F0;
+  padding:40px 32px 80px;
+  min-width:1600px;
+}
+
+/* ── HEADER ── */
+.page-header{text-align:center;margin-bottom:48px}
+.page-header .chip{
+  display:inline-block;background:var(--g1);color:#fff;
+  font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  padding:4px 14px;border-radius:20px;margin-bottom:10px
+}
+.page-header h1{font-size:26px;font-weight:700;color:var(--g1);margin-bottom:4px}
+.page-header p{font-size:13px;color:var(--n3)}
+
+/* ── LEGEND ── */
+.legend{
+  display:flex;flex-wrap:wrap;gap:20px;justify-content:center;
+  margin-bottom:48px;
+}
+.leg{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--n2)}
+.leg-dot{width:12px;height:12px;border-radius:50%}
+.leg-line{width:28px;height:2px}
+.leg-dash{width:28px;height:2px;background:repeating-linear-gradient(90deg,var(--p1) 0,var(--p1) 5px,transparent 5px,transparent 8px)}
+
+/* ── CANVAS ── */
+.canvas{
+  position:relative;
+  width:1540px;
+  height:1200px;
+  margin:0 auto;
+}
+
+/* ── SVG ARROWS ── */
+.arrows{
+  position:absolute;inset:0;width:100%;height:100%;
+  pointer-events:none;z-index:1;overflow:visible;
+}
+
+/* ── PHONE FRAME ── */
+.phone{
+  position:absolute;
+  width:var(--ph-w);
+  z-index:2;
+}
+.phone-shell{
+  width:var(--ph-w);
+  height:var(--ph-h);
+  background:var(--ph-frame);
+  border-radius:28px;
+  padding:10px 8px;
+  box-shadow:0 12px 40px rgba(0,0,0,0.22),inset 0 0 0 1px rgba(255,255,255,0.08);
+  position:relative;
+}
+.phone-shell::before{/* notch */
+  content:'';position:absolute;top:12px;left:50%;transform:translateX(-50%);
+  width:50px;height:6px;background:#2a2a2a;border-radius:10px;z-index:10;
+}
+.phone-screen{
+  width:100%;height:100%;
+  background:var(--ph-screen);
+  border-radius:20px;
+  overflow:hidden;
+  display:flex;flex-direction:column;
+}
+
+/* ── STATUS BAR ── */
+.status-bar{
+  height:18px;padding:0 10px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+}
+.status-bar span{font-size:8px;font-weight:700;color:var(--n2)}
+.status-icons{display:flex;gap:3px;align-items:center}
+.status-icons i{
+  display:block;font-style:normal;font-size:7px;font-weight:700;color:var(--n2);
+}
+
+/* ── NAV BAR ── */
+.app-bar{
+  height:32px;padding:0 10px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;border-bottom:1px solid var(--n4);
+}
+.app-bar .title{font-size:11px;font-weight:700;color:var(--n1)}
+.app-bar .icon{font-size:13px}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav{
+  height:36px;border-top:1px solid var(--n4);
+  display:flex;align-items:center;
+  flex-shrink:0;background:#fff;
+}
+.bnav-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;
+  font-size:7px;font-weight:600;color:var(--n3);
+}
+.bnav-item.active{color:var(--g1)}
+.bnav-item .bicon{font-size:11px}
+
+/* ── CONTENT AREA ── */
+.content{flex:1;overflow:hidden;padding:8px;display:flex;flex-direction:column;gap:6px}
+
+/* ── UI PRIMITIVES ── */
+.ph-text{font-size:8px;color:var(--n2);line-height:1.4}
+.ph-text.bold{font-weight:700;color:var(--n1)}
+.ph-text.muted{color:var(--n3)}
+.ph-text.sm{font-size:7px}
+
+.ph-card{
+  background:#fff;border-radius:10px;padding:8px;
+  border:1px solid var(--n4);
+}
+.ph-card.green{background:var(--gl);border-color:var(--g3)}
+.ph-card.blue{background:var(--bl);border-color:var(--b2)}
+.ph-card.purple{background:var(--pl);border-color:var(--p1)}
+.ph-card.orange{background:var(--ol);border-color:var(--o1)}
+
+.ph-pill{
+  display:inline-block;padding:2px 6px;border-radius:8px;
+  font-size:7px;font-weight:700;
+}
+.ph-pill.green{background:var(--g1);color:#fff}
+.ph-pill.blue{background:var(--b2);color:#fff}
+.ph-pill.gray{background:var(--n4);color:var(--n2)}
+.ph-pill.purple{background:var(--p1);color:#fff}
+
+.ph-btn{
+  width:100%;padding:6px;border-radius:8px;
+  font-size:8px;font-weight:700;text-align:center;
+}
+.ph-btn.primary{background:var(--g1);color:#fff}
+.ph-btn.secondary{background:var(--n5);color:var(--n2);border:1px solid var(--n4)}
+.ph-btn.outline{border:1px solid var(--g1);color:var(--g1);background:transparent}
+
+.ph-progress{
+  height:5px;background:var(--n4);border-radius:10px;overflow:hidden;
+}
+.ph-progress-bar{height:100%;background:var(--g2);border-radius:10px}
+
+.ph-rect{
+  background:var(--n5);border-radius:8px;border:1px dashed var(--n4);
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;color:var(--n3);text-align:center;
+}
+
+.ph-row{display:flex;gap:4px}
+.ph-row>*{flex:1}
+
+.ph-divider{height:1px;background:var(--n4);margin:2px 0}
+
+.ph-list-item{
+  display:flex;align-items:center;gap:6px;padding:5px 0;
+  border-bottom:1px solid var(--n5);
+}
+.ph-list-item .check{
+  width:13px;height:13px;border-radius:4px;border:1.5px solid var(--n4);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:8px;
+}
+.ph-list-item .check.done{background:var(--g1);border-color:var(--g1);color:#fff}
+.ph-list-item .info{flex:1}
+.ph-list-item .badge{font-size:7px;color:var(--n3)}
+
+.ph-chat-bubble{
+  padding:5px 7px;border-radius:10px;font-size:8px;line-height:1.4;max-width:90%;
+}
+.ph-chat-bubble.bot{background:var(--gl);color:var(--n1);border-bottom-left-radius:2px}
+.ph-chat-bubble.user{background:var(--g1);color:#fff;border-bottom-right-radius:2px;align-self:flex-end}
+
+.ph-input{
+  display:flex;align-items:center;gap:4px;padding:5px 6px;
+  background:#fff;border:1px solid var(--n4);border-radius:8px;
+}
+.ph-input .field{flex:1;font-size:7px;color:var(--n3)}
+.ph-input .ico{font-size:10px}
+
+.stats-row{display:flex;gap:4px}
+.stat-box{
+  flex:1;background:#fff;border-radius:8px;padding:4px;
+  border:1px solid var(--n4);text-align:center;
+}
+.stat-box .num{font-size:13px;font-weight:700;color:var(--g1)}
+.stat-box .lbl{font-size:7px;color:var(--n3)}
+
+.mic-btn{
+  width:48px;height:48px;border-radius:50%;background:var(--g1);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;margin:0 auto;
+  box-shadow:0 0 0 6px var(--gl);
+}
+
+.progress-steps{display:flex;gap:3px;justify-content:center;margin-bottom:4px}
+.step-dot{width:6px;height:6px;border-radius:50%;background:var(--n4)}
+.step-dot.active{background:var(--g1);width:16px;border-radius:4px}
+
+.mood-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.mood-card{
+  background:#fff;border:1px solid var(--n4);border-radius:8px;
+  padding:5px;text-align:center;
+}
+.mood-card.sel{border-color:var(--g1);background:var(--gl)}
+.mood-card .emoji{font-size:14px}
+.mood-card .lbl{font-size:7px;color:var(--n2)}
+
+.breath-circle{
+  width:60px;height:60px;border-radius:50%;
+  background:radial-gradient(circle,var(--g3),var(--g1));
+  margin:0 auto;display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:700;color:#fff;
+  box-shadow:0 0 0 8px var(--gl);
+}
+
+.bar-chart{display:flex;align-items:flex-end;gap:3px;height:50px}
+.bar{
+  flex:1;background:var(--g3);border-radius:3px 3px 0 0;
+  position:relative;
+}
+.bar::after{
+  content:attr(data-lbl);
+  position:absolute;bottom:-11px;left:50%;transform:translateX(-50%);
+  font-size:6px;color:var(--n3);white-space:nowrap;
+}
+
+.chip-row{display:flex;gap:3px;flex-wrap:wrap}
+
+/* ── PHONE LABELS ── */
+.phone-label{
+  text-align:center;margin-top:8px;
+}
+.phone-label .uc{
+  font-size:9px;font-weight:700;color:var(--g1);letter-spacing:.5px;text-transform:uppercase;
+}
+.phone-label .name{font-size:11px;font-weight:700;color:var(--n1);line-height:1.2}
+
+/* ── FLOW ARROWS LABELS ── */
+.flow-tag{
+  position:absolute;z-index:5;
+  font-size:9px;font-weight:600;padding:2px 7px;border-radius:10px;
+  pointer-events:none;white-space:nowrap;
+}
+.flow-tag.user{background:var(--gl);color:var(--g1);border:1px solid var(--g3)}
+.flow-tag.system{background:var(--pl);color:var(--p1);border:1px solid var(--p1)}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="chip">CC451 HCI · PC02 · Grupo 1</div>
+  <h1>Terrario Digital de Hábitos y Bienestar</h1>
+  <p>Wireflow — Diagrama de pantallas y flujos de navegación · Martín Centeno Leon</p>
+</div>
+
+<div class="legend">
+  <div class="leg"><div class="leg-dot" style="background:var(--g1)"></div>Pantalla principal</div>
+  <div class="leg"><div class="leg-dot" style="background:var(--b1)"></div>Módulo IA</div>
+  <div class="leg"><div class="leg-dot" style="background:var(--p1)"></div>Modal / Intervención</div>
+  <div class="leg"><div class="leg-dot" style="background:var(--o1)"></div>Onboarding</div>
+  <div class="leg"><div class="leg-dot" style="background:var(--n3)"></div>Info / Config</div>
+  <div class="leg"><div class="leg-line" style="background:var(--g2)"></div>Navegación del usuario</div>
+  <div class="leg"><div class="leg-dash"></div>Transición del sistema (IA)</div>
+</div>
+
+<div class="canvas" id="canvas">
+<svg class="arrows" id="svg">
+  <defs>
+    <marker id="mg" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+      <polygon points="0 0, 7 3.5, 0 7" fill="#2E7D52"/>
+    </marker>
+    <marker id="mp" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+      <polygon points="0 0, 7 3.5, 0 7" fill="#5B21B6"/>
+    </marker>
+    <marker id="mgr" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+      <polygon points="0 0, 7 3.5, 0 7" fill="#9CA3AF"/>
+    </marker>
+  </defs>
+</svg>
+
+<!-- 
+  LAYOUT (center positions):
+  Onboarding:    left=60,  top=80   → center: 155, 300
+  Diario:        left=60,  top=480  → center: 155, 700
+  Reframe:       left=60,  top=860  → center: 155, 1060
+  Mindfulness:   left=590, top=30   → center: 685, 250
+  Bioma:         left=590, top=430  → center: 685, 650
+  Habitos:       left=1120,top=30   → center: 1215, 250
+  Analiticas:    left=1120,top=430  → center: 1215, 650
+  Config:        left=1120,top=830  → center: 1215, 1050
+  Coach:         left=330, top=860  → center: 425, 1060
+-->
+
+<!-- PHONE 1: ONBOARDING -->
+<div class="phone" style="left:60px;top:80px">
+  <div class="phone-shell" style="background:#C2410C">
+    <div class="phone-screen">
+      <div class="status-bar"><span>9:41</span><div class="status-icons"><i>●●●</i><i>WiFi</i><i>🔋</i></div></div>
+      <div class="content" style="background:linear-gradient(160deg,#FEF3C7,#fff)">
+        <div class="progress-steps" style="margin-top:4px">
+          <div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div>
+        </div>
+        <div class="ph-rect" style="height:80px;flex-shrink:0;font-size:28px;border-color:var(--o1);background:var(--ol)">🌱</div>
+        <div class="ph-text bold" style="font-size:10px;text-align:center">¡Hola! ¿Cómo te llamas?</div>
+        <div class="ph-card" style="padding:5px">
+          <div class="ph-text muted sm">Nombre de usuario</div>
+          <div style="height:1px;background:var(--g1);margin-top:3px"></div>
+        </div>
+        <div class="ph-text muted sm" style="text-align:center">Paso 1 de 4 — Perfil básico</div>
+        <div class="ph-btn primary">Continuar →</div>
+      </div>
+      <div class="bottom-nav">
+        <div class="bnav-item"><div class="bicon">🌿</div></div>
+        <div class="bnav-item"><div class="bicon">✅</div></div>
+        <div class="bnav-item"><div class="bicon">💬</div></div>
+        <div class="bnav-item"><div class="bicon">📊</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="phone-label">
+    <div class="uc">UC-05 · Onboarding</div>
+    <div class="name">Splash / Onboarding</div>
+  </div>
+</div>
+
+<!-- PHONE 2: DIARIO MATUTINO -->
+<div class="phone" style="left:60px;top:510px">
+  <div class="phone-shell" style="background:#1E3A5F">
+    <div class="phone-screen">
+      <div class="status-bar" style="background:#1E3A5F"><span style="color:#fff">9:41</span><div class="status-icons"><i style="color:#fff">●●●</i><i style="color:#fff">🔋</i></div></div>
+      <div class="app-bar" style="background:#1E3A5F;border-color:#2563EB">
+        <span class="title" style="color:#fff">🎙️ Diario Matutino</span>
+        <span class="icon" style="color:#fff">✕</span>
+      </div>
+      <div class="content" style="background:#EFF6FF">
+        <div class="ph-text muted sm" style="text-align:center">Martes, 6 mayo · 7:02 AM</div>
+        <div class="ph-text bold" style="text-align:center;font-size:9px">¿Cómo te sientes hoy?</div>
+        <div class="mic-btn">🎙️</div>
+        <div class="ph-rect" style="height:20px;border-color:#93C5FD;background:#DBEAFE">
+          <span style="font-size:7px;color:#1D4ED8">〰️ Escuchando... (0:08)</span>
+        </div>
+        <div class="ph-divider"></div>
+        <div class="ph-text muted sm" style="text-align:center">— o elige tu estado —</div>
+        <div class="mood-grid">
+          <div class="mood-card sel"><div class="emoji">😤</div><div class="lbl">Enfocado</div></div>
+          <div class="mood-card"><div class="emoji">😰</div><div class="lbl">Ansioso</div></div>
+          <div class="mood-card"><div class="emoji">😴</div><div class="lbl">Cansado</div></div>
+          <div class="mood-card"><div class="emoji">🤩</div><div class="lbl">Motivado</div></div>
+        </div>
+        <div class="ph-btn primary">Registrar estado</div>
+      </div>
+    </div>
+  </div>
+  <div class="phone-label">
+    <div class="uc">UC-01 · RF-04, RF-05</div>
+    <div class="name">Diario Matutino</div>
+  </div>
+</div>
+
+<!-- PHONE 3: COACH DE PRODUCTIVIDAD -->
+<div class="phone" style="left:340px;top:870px">
+  <div class="phone-shell" style="background:#1E3A5F">
+    <div class="phone-screen">
+      <div class="status-bar" style="background:#1E3A5F"><span style="color:#fff">9:41</span></div>
+      <div class="app-bar" style="background:#1E3A5F;border-color:#2563EB">
+        <span class="title" style="color:#fff">💬 Coach</span>
+        <span class="icon">←</span>
+      </div>
+      <div class="content" style="gap:5px;background:#F0F9FF">
+        <div class="ph-chat-bubble bot">¡Buenos días! Veo que quieres avanzar en tesis. ¿Qué parte atacamos hoy?</div>
+        <div style="align-self:flex-end">
+          <div class="ph-chat-bubble user">Regar el proyecto tesis</div>
+        </div>
+        <div class="ph-chat-bubble bot">Entendido 🌿 Voy a dividirlo en pasos. ¿Tienes 2h disponibles esta mañana?</div>
+        <div class="ph-card blue" style="padding:6px">
+          <div class="ph-text bold sm">📋 Tareas atómicas generadas:</div>
+          <div class="ph-text sm">· Revisar avance capítulo 2 (30 min)</div>
+          <div class="ph-text sm">· Escribir introducción (60 min)</div>
+          <div class="ph-text sm">· Actualizar bibliografía (30 min)</div>
+        </div>
+        <div style="flex:1"></div>
+        <div class="ph-input">
+          <div class="ico">🎙️</div>
+          <div class="field">Escribe o dicta un comando...</div>
+          <div class="ico">➤</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="phone-label">
+    <div class="uc">UC-02 · RF-08, RF-09, RF-10</div>
+    <div class="name">Coach de Productividad</div>
+  </div>
+</div>
+
+<!-- PHONE 4: REFRAME CARD (modal) -->
+<div class="phone" style="left:60px;top:870px">
+  <div class="phone-shell" style="background:#4C1D95">
+    <div class="phone-screen">
+      <div class="status-bar" style="background:#5B21B6"><span style="color:#fff">9:41</span></div>
+      <div class="content" style="background:#F5F3FF;padding:10px;justify-content:center;gap:8px">
+        <div style="text-align:center;font-size:22px">💡</div>
+        <div class="ph-card purple" style="text-align:center">
+          <div class="ph-text bold" style="color:var(--p1);font-size:9px">Coach detectó algo</div>
+          <div class="ph-text muted sm">Llevas 3 días sin avanzar en "Tesis cap. 2"</div>
+        </div>
+        <div class="ph-card" style="border-left:3px solid var(--p1)">
+          <div class="ph-text sm" style="font-style:italic;color:var(--n2)">"El avance no tiene que ser perfecto, solo consistente. Un párrafo hoy es infinitamente más que cero."</div>
+        </div>
+        <div class="ph-text muted sm" style="text-align:center">¿Qué haces con este mensaje?</div>
+        <div class="ph-btn primary" style="background:var(--p1)">✓ Aceptar y empezar</div>
+        <div class="ph-btn secondary">Descartar</div>
+      </div>
+    </div>
+  </div>
+  <div class="phone-label">
+    <div class="uc">UC-02 · RF-10 (modal)</div>
+    <div class="name">Card de Reframe</div>
+  </div>
+</div>
+
+<!-- PHONE 5: MINDFULNESS (modal) -->
+<div class="phone" style="left:590px;top:30px">
+  <div class="phone-shell" style="background:#4C1D95">
+    <div class="phone-screen">
+      <div class="status-bar" style="background:#5B21B6"><span style="color:#fff">9:41</span></div>
+      <div class="app-bar" style="background:#5B21B6;border-color:#7C3AED">
+        <span class="title" style="color:#fff">🧘 Momento de calma</span>
+        <span class="icon" style="color:#fff">✕</span>
+      </div>
+      <div class="content" style="background:#F5F3FF;align-items:center;justify-content:center;gap:10px">
+        <div class="ph-card purple" style="text-align:center;width:100%">
+          <div class="ph-text sm" style="color:var(--p1)">El Terapeuta detectó señales de agotamiento</div>
+        </div>
+        <div class="ph-text muted sm" style="text-align:center">Técnica de respiración 4-7-8</div>
+        <div class="breath-circle">Inhala<br>4s</div>
+        <div class="ph-row" style="text-align:center;justify-content:center;gap:8px">
+          <div><div class="ph-pill purple">4s</div><div class="ph-text sm" style="margin-top:2px">Inhalar</div></div>
+          <div><div class="ph-pill gray">7s</div><div class="ph-text sm" style="margin-top:2px">Retener</div></div>
+          <div><div class="ph-pill green">8s</div><div class="ph-text sm" style="margin-top:2px">Exhalar</div></div>
+        </div>
+        <div class="ph-text muted sm" style="text-align:center">📳 Guía háptica activada · Ciclo 1 de 3</div>
+        <div class="ph-progress"><div class="ph-progress-bar" style="width:33%;background:var(--p1)"></div></div>
+        <div class="ph-btn primary" style="background:var(--p1)">Saltar ejercicio</div>
+      </div>
+    </div>
+  </div>
+  <div class="phone-label">
+    <div class="uc">UC-04 · RF-06, RF-15 (modal)</div>
+    <div class="name">Módulo de Mindfulness</div>
+  </div>
+</div>
+
+<!-- PHONE 6: BIOMA PRINCIPAL -->
+<div class="phone" style="left:590px;top:430px">
+  <div class="phone-shell" style="background:#1A5C38">
+    <div class="phone-screen">
+      <div class="status-bar" style="background:#1A5C38"><span style="color:#fff">9:41</span><div class="status-icons"><i style="color:#fff">●●●</i><i style="color:#fff">🔋</i></div></div>
+      <div class="app-bar" style="background:#1A5C38;border-color:#2E7D52">
+        <span class="title" style="color:#fff">🌿 Mi Terrario</span>
+        <div style="display:flex;gap:6px"><span class="icon" style="color:#fff">🔔</span><span class="icon" style="color:#fff">⚙️</span></div>
+      </div>
+      <div class="content" style="background:#F0FFF4;padding:6px">
+        <div class="ph-rect" style="height:100px;flex-shrink:0;border-color:var(--g3);background:var(--gl);flex-direction:column;gap:4px">
+          <span style="font-size:28px">🌲🌸🌿</span>
+          <span style="font-size:8px;color:var(--g2);font-weight:600">Bosque · Vitalidad 78%</span>
+        </div>
+        <div class="ph-progress"><div class="ph-progress-bar" style="width:78%"></div></div>
+        <div class="stats-row">
+          <div class="stat-box"><div class="num" style="font-size:11px">5/7</div><div class="lbl">Hábitos hoy</div></div>
+          <div class="stat-box"><div class="num" style="font-size:11px">12🔥</div><div class="lbl">Racha días</div></div>
+          <div class="stat-box"><div class="num" style="font-size:11px">😤</div><div class="lbl">Estado hoy</div></div>
+        </div>
+        <div class="ph-card green" style="padding:5px">
+          <div class="ph-text sm bold">💬 Coach:</div>
+          <div class="ph-text sm">"Buen ritmo esta semana. ¿Regamos la tesis hoy?"</div>
+        </div>
+        <div class="ph-btn primary">🎙️ Diario matutino</div>
+      </div>
+      <div class="bottom-nav">
+        <div class="bnav-item active"><div class="bicon">🌿</div><span>Bioma</span></div>
+        <div class="bnav-item"><div class="bicon">✅</div><span>Hábitos</span></div>
+        <div class="bnav-item"><div class="bicon">💬</div><span>Coach</span></div>
+        <div class="bnav-item"><div class="bicon">📊</div><span>Stats</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="phone-label">
+    <div class="uc">UC-03 · RF-02, RF-03</div>
+    <div class="name">Bioma Principal (Home)</div>
+  </div>
+</div>
+
+<!-- PHONE 7: VISTA DE HABITOS -->
+<div class="phone" style="left:1120px;top:30px">
+  <div class="phone-shell" style="background:#374151">
+    <div class="phone-screen">
+      <div class="status-bar"><span>9:41</span></div>
+      <div class="app-bar">
+        <span class="title">✅ Mis Hábitos</span>
+        <span class="icon">＋</span>
+      </div>
+      <div class="content">
+        <div class="chip-row">
+          <span class="ph-pill green">Estudio</span>
+          <span class="ph-pill gray">Salud</span>
+          <span class="ph-pill gray">Personal</span>
+        </div>
+        <div class="ph-list-item">
+          <div class="check done">✓</div>
+          <div class="info">
+            <div class="ph-text bold sm">📖 Leer 30 min</div>
+            <div class="ph-progress" style="margin-top:2px"><div class="ph-progress-bar" style="width:100%"></div></div>
+          </div>
+          <div class="badge">Diario</div>
+        </div>
+        <div class="ph-list-item">
+          <div class="check done">✓</div>
+          <div class="info">
+            <div class="ph-text bold sm">🏃 Ejercicio</div>
+            <div class="ph-progress" style="margin-top:2px"><div class="ph-progress-bar" style="width:100%"></div></div>
+          </div>
+          <div class="badge">Diario</div>
+        </div>
+        <div class="ph-list-item">
+          <div class="check"></div>
+          <div class="info">
+            <div class="ph-text bold sm">📝 Avanzar tesis</div>
+            <div class="ph-progress" style="margin-top:2px"><div class="ph-progress-bar" style="width:30%"></div></div>
+          </div>
+          <div class="badge" style="color:var(--o1)">⚠ 3 días</div>
+        </div>
+        <div class="ph-list-item">
+          <div class="check"></div>
+          <div class="info">
+            <div class="ph-text bold sm">💧 Tomar agua 2L</div>
+            <div class="ph-progress" style="margin-top:2px"><div class="ph-progress-bar" style="width:60%"></div></div>
+          </div>
+          <div class="badge">Diario</div>
+        </div>
+        <div class="ph-btn outline">+ Nuevo hábito</div>
+      </div>
+      <div class="bottom-nav">
+        <div class="bnav-item"><div class="bicon">🌿</div><span>Bioma</span></div>
+        <div class="bnav-item active"><div class="bicon">✅</div><span>Hábitos</span></div>
+        <div class="bnav-item"><div class="bicon">💬</div><span>Coach</span></div>
+        <div class="bnav-item"><div class="bicon">📊</div><span>Stats</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="phone-label">
+    <div class="uc">UC-05 · RF-01</div>
+    <div class="name">Vista de Hábitos</div>
+  </div>
+</div>
+
+<!-- PHONE 8: ANALÍTICAS -->
+<div class="phone" style="left:1120px;top:430px">
+  <div class="phone-shell" style="background:#374151">
+    <div class="phone-screen">
+      <div class="status-bar"><span>9:41</span></div>
+      <div class="app-bar">
+        <span class="title">📊 Esta semana</span>
+        <span class="icon">↗</span>
+      </div>
+      <div class="content">
+        <div class="stats-row">
+          <div class="stat-box"><div class="num">71%</div><div class="lbl">Completitud</div></div>
+          <div class="stat-box"><div class="num">12🔥</div><div class="lbl">Racha</div></div>
+          <div class="stat-box"><div class="num">+8%</div><div class="lbl">vs sem. ant.</div></div>
+        </div>
+        <div class="ph-text bold sm">Hábitos por día</div>
+        <div class="bar-chart">
+          <div class="bar" style="height:40%" data-lbl="L"></div>
+          <div class="bar" style="height:70%" data-lbl="M"></div>
+          <div class="bar" style="height:55%" data-lbl="X"></div>
+          <div class="bar" style="height:90%" data-lbl="J"></div>
+          <div class="bar" style="height:80%" data-lbl="V"></div>
+          <div class="bar" style="height:60%" data-lbl="S"></div>
+          <div class="bar" style="height:30%;background:var(--n4)" data-lbl="D"></div>
+        </div>
+        <div style="margin-top:12px"></div>
+        <div class="ph-text bold sm">Tendencia de estado de ánimo</div>
+        <div class="ph-rect" style="height:30px;border-color:#93C5FD;background:#EFF6FF">
+          <span style="font-size:7px;color:#1D4ED8">😴 → 😤 → 😰 → 😤 → 🤩</span>
+        </div>
+        <div class="ph-card green" style="padding:5px">
+          <div class="ph-text sm">💬 <b>Coach:</b> Mejor semana en el mes. Tu peor día fue el lunes.</div>
+        </div>
+      </div>
+      <div class="bottom-nav">
+        <div class="bnav-item"><div class="bicon">🌿</div><span>Bioma</span></div>
+        <div class="bnav-item"><div class="bicon">✅</div><span>Hábitos</span></div>
+        <div class="bnav-item"><div class="bicon">💬</div><span>Coach</span></div>
+        <div class="bnav-item active"><div class="bicon">📊</div><span>Stats</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="phone-label">
+    <div class="uc">UC-06 · RF-12</div>
+    <div class="name">Analíticas Semanales</div>
+  </div>
+</div>
+
+<!-- PHONE 9: CONFIGURACIÓN -->
+<div class="phone" style="left:1120px;top:830px">
+  <div class="phone-shell" style="background:#374151">
+    <div class="phone-screen">
+      <div class="status-bar"><span>9:41</span></div>
+      <div class="app-bar">
+        <span class="title">⚙️ Perfil</span>
+        <span class="icon">✏️</span>
+      </div>
+      <div class="content">
+        <div style="text-align:center">
+          <div style="font-size:32px;margin-bottom:4px">🧑‍💻</div>
+          <div class="ph-text bold">María Gracia R.</div>
+          <div class="ph-text muted sm">Estudiante · Bosque · Racha 12🔥</div>
+        </div>
+        <div class="ph-divider"></div>
+        <div class="ph-list-item"><div class="check" style="font-size:11px">🌿</div><div class="info"><div class="ph-text sm bold">Tipo de bioma</div><div class="ph-text sm muted">Bosque (automático)</div></div><div class="badge">›</div></div>
+        <div class="ph-list-item"><div class="check" style="font-size:11px">♿</div><div class="info"><div class="ph-text sm bold">Accesibilidad</div><div class="ph-text sm muted">WCAG AA · TTS activo</div></div><div class="badge">›</div></div>
+        <div class="ph-list-item"><div class="check" style="font-size:11px">🔔</div><div class="info"><div class="ph-text sm bold">Notificaciones</div><div class="ph-text sm muted">7:00 AM · Haptic ON</div></div><div class="badge">›</div></div>
+        <div class="ph-list-item"><div class="check" style="font-size:11px">🎨</div><div class="info"><div class="ph-text sm bold">Tema</div><div class="ph-text sm muted">Claro / Verde</div></div><div class="badge">›</div></div>
+        <div class="ph-btn secondary" style="font-size:8px">Cerrar sesión</div>
+      </div>
+      <div class="bottom-nav">
+        <div class="bnav-item"><div class="bicon">🌿</div><span>Bioma</span></div>
+        <div class="bnav-item"><div class="bicon">✅</div><span>Hábitos</span></div>
+        <div class="bnav-item"><div class="bicon">💬</div><span>Coach</span></div>
+        <div class="bnav-item active"><div class="bicon">⚙️</div><span>Perfil</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="phone-label">
+    <div class="uc">RF-17 · A11y</div>
+    <div class="name">Configuración / Perfil</div>
+  </div>
+</div>
+
+<!-- FLOW LABELS -->
+<div class="flow-tag user" style="left:262px;top:330px">Primer uso →</div>
+<div class="flow-tag user" style="left:262px;top:568px">Diario del día →</div>
+<div class="flow-tag system" style="left:593px;top:408px">Sistema detecta burnout</div>
+<div class="flow-tag user" style="left:792px;top:258px">Mis hábitos →</div>
+<div class="flow-tag user" style="left:792px;top:568px">Ver semana →</div>
+<div class="flow-tag user" style="left:792px;top:848px">Configuración →</div>
+<div class="flow-tag user" style="left:640px;top:858px">← Comandos</div>
+<div class="flow-tag system" style="left:340px;top:990px">Procrastinación detectada</div>
+
+</div><!-- /canvas -->
+
+<script>
+// Draw smooth bezier arrows after layout
+const cv = document.getElementById('canvas');
+const sv = document.getElementById('svg');
+
+function center(el) {
+  const cr = cv.getBoundingClientRect();
+  const er = el.getBoundingClientRect();
+  return {
+    x: er.left - cr.left + er.width/2,
+    y: er.top  - cr.top  + er.height/2,
+    t: er.top  - cr.top,
+    b: er.top  - cr.top + er.height,
+    l: er.left - cr.left,
+    r: er.left - cr.left + er.width,
+  };
+}
+
+function path(x1,y1,x2,y2,type='user') {
+  const dx=x2-x1, dy=y2-y1;
+  const cx1=x1+dx*0.45, cy1=y1+dy*0.05;
+  const cx2=x2-dx*0.45, cy2=y2-dy*0.05;
+  const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+  p.setAttribute('d',`M${x1},${y1} C${cx1},${cy1} ${cx2},${cy2} ${x2},${y2}`);
+  p.setAttribute('stroke', type==='user'?'#2E7D52':'#5B21B6');
+  p.setAttribute('stroke-width','2');
+  p.setAttribute('fill','none');
+  p.setAttribute('opacity','0.8');
+  if(type==='system') p.setAttribute('stroke-dasharray','7 3');
+  p.setAttribute('marker-end',`url(#${type==='user'?'mg':'mp'})`);
+  sv.appendChild(p);
+}
+
+const phones = document.querySelectorAll('.phone');
+const ids = ['s0','s1','s2','s3','s4','s5','s6','s7','s8'];
+phones.forEach((p,i)=>p.id='ph'+(i+1));
+
+window.addEventListener('load', () => {
+  setTimeout(()=>{
+    const p = id => center(document.getElementById(id));
+    const ph = i => center(document.querySelector(`.phone:nth-child(${i})`));
+
+    // Get all phone shells for accurate positioning
+    const shells = document.querySelectorAll('.phone-shell');
+    const sc = (i) => {
+      const el = shells[i];
+      const cr = cv.getBoundingClientRect();
+      const er = el.getBoundingClientRect();
+      return {
+        x: er.left - cr.left + er.width/2,
+        y: er.top  - cr.top  + er.height/2,
+        t: er.top  - cr.top,
+        b: er.top  - cr.top + er.height,
+        l: er.left - cr.left,
+        r: er.left - cr.left + er.width,
+      };
+    };
+
+    // 0=onboarding, 1=diario, 2=coach, 3=reframe, 4=mindfulness, 5=bioma, 6=habitos, 7=analiticas, 8=config
+    const s = Array.from({length:9},(_,i)=>sc(i));
+
+    // Onboarding → Bioma
+    path(s[0].r, s[0].y, s[5].l, s[5].y-60, 'user');
+    // Diario → Bioma (right to left of bioma)
+    path(s[1].r, s[1].y, s[5].l, s[5].y, 'user');
+    // Diario → Bioma (system: after processing)
+    path(s[1].r+10, s[1].t, s[5].l, s[5].t+20, 'system');
+    // Bioma → Diario
+    path(s[5].l, s[5].y-30, s[1].r, s[1].y-20, 'user');
+    // Bioma → Mindfulness (system)
+    path(s[5].x, s[5].t, s[4].x, s[4].b, 'system');
+    // Mindfulness → Bioma
+    path(s[4].r, s[4].y, s[5].l+10, s[5].t+30, 'user');
+    // Bioma → Habitos
+    path(s[5].r, s[5].y-60, s[6].l, s[6].y, 'user');
+    // Habitos → Bioma
+    path(s[6].l, s[6].y+30, s[5].r, s[5].y-30, 'user');
+    // Bioma → Analiticas
+    path(s[5].r, s[5].y+20, s[7].l, s[7].y, 'user');
+    // Analiticas → Bioma
+    path(s[7].l, s[7].y+30, s[5].r, s[5].y+50, 'user');
+    // Bioma → Config
+    path(s[5].r, s[5].y+70, s[8].l, s[8].y, 'user');
+    // Bioma → Coach
+    path(s[5].l, s[5].y+60, s[2].r, s[2].y, 'user');
+    // Coach → Bioma
+    path(s[2].r, s[2].y-20, s[5].l, s[5].y+80, 'user');
+    // Coach → Reframe (system)
+    path(s[2].l, s[2].y+30, s[3].r, s[3].y, 'system');
+    // Reframe → Bioma
+    path(s[3].r, s[3].y-30, s[5].l-10, s[5].b, 'user');
+  }, 200);
+});
+</script>
+</body>
+</html>

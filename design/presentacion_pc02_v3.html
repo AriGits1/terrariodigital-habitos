@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terrario Digital — CC451 PC02</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0A1A0D; --bg2:#0F2314; --bg3:#142B19;
+  --g1:#1A5C38; --g2:#2E7D52; --g3:#52B788; --g4:#95D5B2; --g5:#D8F3DC;
+  --cream:#F4F0E6; --white:#FFFFFF;
+  --muted:#7A9980; --border:rgba(82,183,136,0.2);
+  --card:rgba(255,255,255,0.04); --card2:rgba(82,183,136,0.08);
+  --ariana:#2563EB; --martin:#1A5C38; --cinver:#7C3AED;
+}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg)}
+
+/* ── PARTICLES ── */
+.particles{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.p{position:absolute;width:2px;height:2px;background:var(--g3);border-radius:50%;opacity:0;animation:float linear infinite}
+@keyframes float{
+  0%{transform:translateY(100vh) translateX(0) scale(0);opacity:0}
+  10%{opacity:.4}
+  90%{opacity:.2}
+  100%{transform:translateY(-10vh) translateX(var(--drift)) scale(1.5);opacity:0}
+}
+
+/* ── SLIDES ── */
+.deck{position:relative;width:100vw;height:100vh;z-index:1}
+.slide{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;
+  opacity:0;transform:translateY(20px);
+  transition:all .5s cubic-bezier(.4,0,.2,1);
+  pointer-events:none;
+}
+.slide.active{opacity:1;transform:translateY(0);pointer-events:all}
+.slide.out{opacity:0;transform:translateY(-20px)}
+
+/* ── PROGRESS ── */
+.progress{
+  position:fixed;bottom:0;left:0;height:3px;
+  background:linear-gradient(90deg,var(--g2),var(--g4));
+  transition:width .4s ease;z-index:100;
+}
+.slide-counter{
+  position:fixed;bottom:14px;right:20px;
+  font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);z-index:100;
+}
+.nav-hint{
+  position:fixed;bottom:14px;left:20px;
+  font-family:'DM Sans',sans-serif;font-size:11px;color:var(--muted);z-index:100;
+}
+.nav-hint span{color:var(--g3)}
+
+/* ── PRESENTER BADGE ── */
+.presenter{
+  position:absolute;top:24px;right:28px;
+  font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;
+  letter-spacing:.8px;text-transform:uppercase;
+  padding:5px 12px;border-radius:20px;
+}
+.presenter.martin{background:rgba(26,92,56,.3);color:#95D5B2;border:1px solid rgba(82,183,136,.3)}
+.presenter.ariana{background:rgba(37,99,235,.2);color:#93C5FD;border:1px solid rgba(37,99,235,.3)}
+.presenter.cinver{background:rgba(124,58,237,.2);color:#C4B5FD;border:1px solid rgba(124,58,237,.3)}
+
+/* ── SHARED LAYOUT ── */
+.slide-inner{flex:1;display:flex;flex-direction:column;padding:52px 72px 40px;position:relative}
+.eyebrow{font-family:'DM Mono',monospace;font-size:11px;font-weight:500;letter-spacing:2px;
+  text-transform:uppercase;color:var(--g3);margin-bottom:12px}
+h1.display{font-family:'Playfair Display',serif;font-size:clamp(36px,5vw,64px);
+  font-weight:900;color:var(--white);line-height:1.05;margin-bottom:8px}
+h2.slide-title{font-family:'Playfair Display',serif;font-size:clamp(28px,3.5vw,46px);
+  font-weight:700;color:var(--white);line-height:1.1;margin-bottom:24px}
+h3.section{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;
+  letter-spacing:1.5px;text-transform:uppercase;color:var(--g3);margin-bottom:8px}
+p.body{font-family:'DM Sans',sans-serif;font-size:16px;line-height:1.7;
+  color:var(--cream);font-weight:300;max-width:680px}
+p.lead{font-family:'Playfair Display',serif;font-size:22px;font-style:italic;
+  color:var(--g4);line-height:1.5;max-width:700px;margin-bottom:24px}
+p.sm{font-family:'DM Sans',sans-serif;font-size:13px;color:var(--muted);line-height:1.6}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px 24px}
+.card-green{background:var(--card2);border:1px solid rgba(82,183,136,.3);border-radius:16px;padding:20px 24px}
+.tag{display:inline-block;font-family:'DM Mono',monospace;font-size:10px;font-weight:500;
+  padding:3px 10px;border-radius:12px;background:rgba(82,183,136,.15);color:var(--g4);
+  letter-spacing:.5px;margin-right:6px;margin-bottom:4px}
+
+/* ── BG DECORATION ── */
+.orb{position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:-1}
+
+/* ═══════ SLIDE 1 — COVER ═══════════════════════════════════ */
+#s1{background:radial-gradient(ellipse 80% 60% at 60% 40%,#0E2E18,var(--bg))}
+#s1 .inner{flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 72px;gap:0;position:relative}
+#s1 .orb1{width:500px;height:500px;background:radial-gradient(circle,rgba(46,125,82,.3),transparent);top:-100px;right:-100px}
+#s1 .orb2{width:300px;height:300px;background:radial-gradient(circle,rgba(82,183,136,.15),transparent);bottom:40px;left:-40px}
+#s1 .chip{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--g3);padding:6px 16px;border:1px solid var(--border);border-radius:20px;
+  display:inline-block;margin-bottom:28px;background:rgba(82,183,136,.06)}
+#s1 h1{font-family:'Playfair Display',serif;font-size:clamp(44px,6vw,80px);font-weight:900;
+  color:var(--white);line-height:1.0;margin-bottom:12px}
+#s1 h1 em{color:var(--g3);font-style:italic}
+#s1 .sub{font-family:'DM Sans',sans-serif;font-size:18px;color:var(--muted);font-weight:300;
+  margin-bottom:48px;max-width:600px;line-height:1.5}
+#s1 .team{display:flex;gap:32px;align-items:center}
+#s1 .member{display:flex;align-items:center;gap:10px}
+#s1 .dot{width:8px;height:8px;border-radius:50%}
+#s1 .member-name{font-family:'DM Sans',sans-serif;font-size:14px;color:var(--cream);font-weight:500}
+#s1 .member-role{font-size:11px;color:var(--muted)}
+#s1 .course{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);
+  position:absolute;bottom:32px;right:72px;letter-spacing:1px}
+#s1 .big-leaf{position:absolute;right:72px;top:50%;transform:translateY(-50%);
+  font-size:180px;opacity:.12;line-height:1;user-select:none;filter:blur(1px)}
+
+/* ═══════ SLIDE 2 — PROBLEMA ════════════════════════════════ */
+#s2{background:linear-gradient(135deg,var(--bg) 0%,#0B1F10 100%)}
+#s2 .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-top:8px}
+#s2 .problem-card{background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:28px 24px;position:relative;overflow:hidden}
+#s2 .problem-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--g2),var(--g4))}
+#s2 .problem-num{font-family:'Playfair Display',serif;font-size:56px;font-weight:900;
+  color:rgba(82,183,136,.2);line-height:1;margin-bottom:8px}
+#s2 .problem-title{font-family:'DM Sans',sans-serif;font-size:17px;font-weight:600;
+  color:var(--white);margin-bottom:10px}
+#s2 .problem-desc{font-size:13px;color:var(--muted);line-height:1.6}
+#s2 .insight{margin-top:24px;padding:16px 24px;background:var(--card2);border-radius:12px;
+  border-left:3px solid var(--g3)}
+#s2 .insight-text{font-family:'Playfair Display',serif;font-size:15px;font-style:italic;
+  color:var(--g4);line-height:1.5}
+
+/* ═══════ SLIDE 3 — USUARIOS ════════════════════════════════ */
+#s3{background:linear-gradient(135deg,var(--bg) 0%,#0B1A1F 100%)}
+#s3 .users-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:8px}
+#s3 .user-card{background:var(--card);border-radius:14px;padding:22px 20px;border:1px solid var(--border)}
+#s3 .user-icon{font-size:32px;margin-bottom:10px}
+#s3 .user-name{font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;color:var(--white);margin-bottom:2px}
+#s3 .user-type{font-size:11px;color:var(--g3);font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:12px}
+#s3 .user-quote{font-family:'Playfair Display',serif;font-size:13px;font-style:italic;color:var(--cream);line-height:1.5;margin-bottom:12px;border-left:2px solid var(--g3);padding-left:10px}
+#s3 .user-insight{font-size:12px;color:var(--muted);line-height:1.5}
+#s3 .insight-key{color:var(--g4);font-weight:600}
+#s3 .disc-note{margin-top:16px;padding:12px 20px;background:rgba(37,99,235,.1);
+  border:1px solid rgba(37,99,235,.25);border-radius:10px}
+#s3 .disc-note p{font-size:12px;color:#93C5FD}
+
+/* ═══════ SLIDE 4 — BENCHMARK ══════════════════════════════ */
+#s4{background:linear-gradient(135deg,var(--bg) 0%,#130B1F 100%)}
+#s4 .apps-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:12px}
+#s4 .app-card{background:var(--card);border-radius:12px;padding:18px 16px;border:1px solid var(--border)}
+#s4 .app-icon{font-size:26px;margin-bottom:8px}
+#s4 .app-name{font-size:14px;font-weight:700;color:var(--white);margin-bottom:6px}
+#s4 .app-pro{font-size:11px;color:var(--g4);margin-bottom:4px}
+#s4 .app-con{font-size:11px;color:#F87171}
+#s4 .diff-box{margin-top:16px;padding:18px 24px;background:var(--card-green);
+  border-radius:12px;border:1px solid rgba(82,183,136,.3)}
+#s4 .diff-box p{font-size:14px;color:var(--cream)}
+#s4 .diff-box strong{color:var(--g4)}
+
+/* ═══════ SLIDE 5 — REQUERIMIENTOS ════════════════════════════ */
+#s5{background:var(--bg)}
+#s5 .req-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px;flex:1}
+#s5 .req-group{background:var(--card);border-radius:14px;padding:20px}
+#s5 .req-group h4{font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px}
+#s5 .req-group.rf h4{color:var(--g4)}
+#s5 .req-group.rnf h4{color:#93C5FD}
+#s5 .req-item{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px}
+#s5 .req-id{font-family:'DM Mono',monospace;font-size:10px;font-weight:700;
+  padding:2px 6px;border-radius:6px;white-space:nowrap;flex-shrink:0;margin-top:1px}
+#s5 .rf .req-id{background:rgba(82,183,136,.2);color:var(--g4)}
+#s5 .rnf .req-id{background:rgba(37,99,235,.2);color:#93C5FD}
+#s5 .req-text{font-size:12px;color:var(--cream);line-height:1.5}
+#s5 .mvp-note{margin-top:12px;padding:12px 20px;background:var(--card2);border-radius:10px;
+  display:flex;align-items:center;gap:10px}
+#s5 .mvp-note p{font-size:12px;color:var(--muted)}
+#s5 .mvp-note strong{color:var(--g4)}
+
+/* ═══════ SLIDE 6 — SOLUCIÓN ════════════════════════════════ */
+#s6{background:radial-gradient(ellipse 70% 70% at 50% 50%,#0E2E18,var(--bg))}
+#s6 .solution-layout{display:grid;grid-template-columns:1fr 1fr;gap:40px;flex:1;align-items:center}
+#s6 .bioma-viz{background:var(--card2);border:1px solid var(--border);border-radius:20px;
+  padding:32px;display:flex;flex-direction:column;align-items:center;gap:16px;position:relative}
+#s6 .bioma-emoji{font-size:72px;line-height:1}
+#s6 .bioma-bar{width:80%;height:8px;background:rgba(255,255,255,.1);border-radius:10px;overflow:hidden}
+#s6 .bioma-fill{height:100%;width:78%;background:linear-gradient(90deg,var(--g2),var(--g4));border-radius:10px}
+#s6 .bioma-label{font-family:'DM Mono',monospace;font-size:12px;color:var(--g4)}
+#s6 .feature-list{display:flex;flex-direction:column;gap:14px}
+#s6 .feature{display:flex;align-items:flex-start;gap:14px}
+#s6 .feat-icon{width:36px;height:36px;border-radius:10px;background:var(--card2);
+  display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+#s6 .feat-title{font-size:15px;font-weight:600;color:var(--white);margin-bottom:2px}
+#s6 .feat-desc{font-size:12px;color:var(--muted);line-height:1.5}
+
+/* ═══════ SLIDE 7 — ARQUITECTURA IA ════════════════════════ */
+#s7{background:linear-gradient(135deg,var(--bg) 0%,#0A0F1F 100%)}
+#s7 .arch-layout{display:grid;grid-template-columns:1fr auto 1fr;gap:20px;align-items:center;flex:1;margin-top:16px}
+#s7 .agent-card{background:var(--card);border-radius:16px;padding:24px 20px;border:1px solid var(--border)}
+#s7 .agent-card.terapeuta{border-color:rgba(124,58,237,.4);background:rgba(124,58,237,.06)}
+#s7 .agent-card.coach{border-color:rgba(37,99,235,.4);background:rgba(37,99,235,.06)}
+#s7 .agent-icon{font-size:36px;margin-bottom:10px}
+#s7 .agent-name{font-size:16px;font-weight:700;color:var(--white);margin-bottom:6px}
+#s7 .agent-desc{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:12px}
+#s7 .agent-item{font-size:11px;color:var(--cream);margin-bottom:4px;padding-left:12px;position:relative}
+#s7 .agent-item::before{content:'→';position:absolute;left:0;color:var(--g3)}
+#s7 .center-flow{display:flex;flex-direction:column;align-items:center;gap:10px}
+#s7 .flow-node{background:var(--g1);border-radius:12px;padding:12px 16px;text-align:center;width:120px}
+#s7 .flow-node p{font-size:11px;font-weight:600;color:var(--white)}
+#s7 .flow-arrow{font-size:20px;color:var(--g3)}
+#s7 .arch-note{margin-top:16px;padding:12px 20px;background:var(--card2);border-radius:10px}
+#s7 .arch-note p{font-size:12px;color:var(--muted)}
+
+/* ═══════ SLIDE 8 — CASOS DE USO ════════════════════════════ */
+#s8{background:var(--bg)}
+#s8 .uc-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:10px;flex:1}
+#s8 .uc-card{background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:20px 18px;display:flex;flex-direction:column;gap:8px}
+#s8 .uc-id{font-family:'DM Mono',monospace;font-size:11px;font-weight:700;
+  color:var(--g3);background:var(--card2);padding:3px 10px;border-radius:8px;
+  display:inline-block;width:fit-content}
+#s8 .uc-title{font-size:15px;font-weight:700;color:var(--white);line-height:1.2}
+#s8 .uc-flow{font-size:12px;color:var(--muted);line-height:1.6}
+#s8 .uc-flow strong{color:var(--cream)}
+#s8 .uc-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+#s8 .uc-tag{font-size:9px;font-weight:600;padding:2px 8px;border-radius:8px;
+  background:rgba(82,183,136,.12);color:var(--g4);font-family:'DM Mono',monospace}
+
+/* ═══════ SLIDE 9 — INTERFACES ═════════════════════════════ */
+#s9{background:linear-gradient(135deg,var(--bg) 0%,#1A0B14 100%)}
+#s9 .if-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px;flex:1}
+#s9 .if-card{background:var(--card);border-radius:14px;padding:22px 20px;border:1px solid var(--border);position:relative;overflow:hidden}
+#s9 .if-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+#s9 .if-card.nc::after{background:linear-gradient(90deg,var(--g2),var(--g4))}
+#s9 .if-card.voz::after{background:linear-gradient(90deg,#2563EB,#7C3AED)}
+#s9 .if-card.llm::after{background:linear-gradient(90deg,#7C3AED,#EC4899)}
+#s9 .if-card.haptic::after{background:linear-gradient(90deg,#D35400,#F59E0B)}
+#s9 .if-icon{font-size:28px;margin-bottom:10px}
+#s9 .if-title{font-size:15px;font-weight:700;color:var(--white);margin-bottom:8px}
+#s9 .if-desc{font-size:12px;color:var(--muted);line-height:1.6}
+#s9 .if-req{margin-top:8px;font-size:10px;font-family:'DM Mono',monospace;color:var(--g3)}
+
+/* ═══════ SLIDE 10 — USABILIDAD ════════════════════════════ */
+#s10{background:var(--bg)}
+#s10 .us-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px}
+#s10 .us-card{background:var(--card);border-radius:12px;padding:18px 14px;
+  border:1px solid var(--border);text-align:center}
+#s10 .us-num{font-family:'Playfair Display',serif;font-size:32px;font-weight:900;
+  color:var(--g3);line-height:1;margin-bottom:4px}
+#s10 .us-label{font-size:11px;font-weight:600;color:var(--white);margin-bottom:4px;line-height:1.3}
+#s10 .us-method{font-size:10px;color:var(--muted)}
+#s10 .us-bottom{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+#s10 .us-bottom-card{background:var(--card2);border-radius:12px;padding:14px 18px;border:1px solid var(--border)}
+#s10 .us-bottom-card h4{font-size:12px;font-weight:700;color:var(--g4);margin-bottom:6px}
+#s10 .us-bottom-card p{font-size:12px;color:var(--muted);line-height:1.5}
+
+/* ═══════ SLIDE 11 — GANTT ═════════════════════════════════ */
+#s11{background:var(--bg)}
+#s11 .gantt-wrap{flex:1;margin-top:12px;overflow:hidden}
+#s11 table{width:100%;border-collapse:collapse;font-size:11px}
+#s11 th{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.5px;
+  color:var(--muted);text-transform:uppercase;padding:6px 8px;
+  background:rgba(255,255,255,.03);text-align:center;font-weight:500}
+#s11 th.task-col{text-align:left;width:240px}
+#s11 th.who-col{width:80px}
+#s11 td{padding:5px 8px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle}
+#s11 td.task{font-size:11px;color:var(--cream);font-weight:500}
+#s11 td.who{font-size:10px;font-weight:700;text-align:center}
+#s11 td.bar{padding:5px 4px}
+#s11 .bar-cell{height:14px;border-radius:4px;opacity:.85}
+.col-ariana{color:#93C5FD} .bg-ariana{background:#1E3A8A}
+.col-martin{color:#86EFAC} .bg-martin{background:#14532D}
+.col-cinver{color:#DDD6FE} .bg-cinver{background:#4C1D95}
+.col-equipo{color:#FDE68A} .bg-equipo{background:#78350F}
+#s11 .legend{display:flex;gap:20px;margin-top:10px}
+#s11 .leg{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--muted)}
+#s11 .leg-dot{width:10px;height:10px;border-radius:3px}
+
+/* ═══════ SLIDE 12 — CIERRE ════════════════════════════════ */
+#s12{background:radial-gradient(ellipse 80% 70% at 50% 50%,#0E2E18,var(--bg))}
+#s12 .cierre-inner{flex:1;display:flex;flex-direction:column;justify-content:center;
+  padding:0 72px;position:relative;gap:32px}
+#s12 .big-text{font-family:'Playfair Display',serif;font-size:clamp(32px,4vw,54px);
+  font-weight:900;color:var(--white);line-height:1.1;max-width:700px}
+#s12 .big-text em{color:var(--g3);font-style:italic}
+#s12 .next-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:780px}
+#s12 .next-item{padding:14px 18px;background:var(--card);border-radius:12px;
+  border:1px solid var(--border)}
+#s12 .next-item h4{font-size:12px;font-weight:700;color:var(--g4);margin-bottom:4px}
+#s12 .next-item p{font-size:11px;color:var(--muted)}
+#s12 .final-line{font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);
+  letter-spacing:.5px}
+#s12 .big-bg-leaf{position:absolute;right:40px;bottom:0;font-size:240px;
+  opacity:.06;line-height:1;user-select:none;filter:blur(2px)}
+
+/* ── CLICK ZONES ── */
+.click-prev{position:fixed;left:0;top:0;width:40%;height:100%;z-index:50;cursor:w-resize}
+.click-next{position:fixed;right:0;top:0;width:40%;height:100%;z-index:50;cursor:e-resize}
+.click-prev:hover~.nav-hint,.click-next:hover~.nav-hint{opacity:0}
+
+/* ═══ WIREFRAME SLIDES ═════════════════════════════════════ */
+#s_wf .wf-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:20px;
+  flex:1;align-items:center;
+}
+.wf-phone{display:flex;flex-direction:column;align-items:center;gap:8px}
+.wf-frame{
+  width:100%;max-width:160px;
+  border-radius:16px;overflow:hidden;
+  box-shadow:0 8px 32px rgba(0,0,0,.4);
+  border:1px solid rgba(82,183,136,.2);
+}
+.wf-frame svg{display:block;width:100%;height:auto}
+.wf-label{text-align:center}
+.wf-uc{display:block;font-family:"DM Mono",monospace;font-size:9px;
+  color:var(--g3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:2px}
+.wf-label{font-family:"DM Sans",sans-serif;font-size:11px;
+  font-weight:600;color:var(--cream)}
+.wf-note{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 20px;background:var(--card2);border-radius:10px;
+  border:1px solid var(--border);margin-top:4px;
+}
+.wf-note span{font-size:12px;color:var(--muted)}
+.wf-link{font-family:"DM Mono",monospace;font-size:10px;
+  color:var(--g3)!important;letter-spacing:.3px}
+/* Nav diagram slide */
+#s_nav .nav-diagram{
+  flex:1;background:var(--card);border:1px solid var(--border);
+  border-radius:16px;padding:16px;overflow:hidden;
+}
+</style>
+</head>
+<body>
+
+<!-- PARTICLES -->
+<div class="particles" id="particles"></div>
+
+<!-- DECK -->
+<div class="deck" id="deck">
+
+  <!-- ═══ SLIDE 1: PORTADA ═══════════════════════════════════ -->
+  <div class="slide active" id="s1">
+    <div class="inner">
+      <div class="orb orb1"></div>
+      <div class="orb orb2"></div>
+      <div class="big-leaf">🌿</div>
+      <div class="chip">CC451 · Interacción Humano Computador · PC02 · Grupo 1</div>
+      <h1>Terrario Digital<br>de <em>Hábitos</em> y<br>Bienestar</h1>
+      <p class="sub">Una app donde tus hábitos cultivan un ecosistema vivo.<br>IA + voz + gamificación + interfaces hápticas.</p>
+      <div class="team">
+        <div class="member">
+          <div class="dot" style="background:#95D5B2"></div>
+          <div><div class="member-name">Cinver Espinoza Valera</div></div>
+        </div>
+        <div class="member">
+          <div class="dot" style="background:#95D5B2"></div>
+          <div><div class="member-name">Martin Centeno Leon</div></div>
+        </div>
+        <div class="member">
+          <div class="dot" style="background:#93C5FD"></div>
+          <div><div class="member-name">Ariana Mercado Taype</div></div>
+        </div>
+      </div>
+      <div class="course">Lima, mayo 2026 · Universidad Nacional de Ingeniería</div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 2: PROBLEMA ══════════════════════════════════ -->
+  <div class="slide" id="s2">
+    <div class="slide-inner">
+      <div class="presenter martin">Martín</div>
+      <div class="eyebrow">El problema</div>
+      <h2 class="slide-title">¿Por qué las apps de hábitos fallan?</h2>
+      <div class="grid">
+        <div class="problem-card">
+          <div class="problem-num">01</div>
+          <div class="problem-title">Sin consecuencias visibles</div>
+          <p class="problem-desc">Cuando el usuario deja de usar la app, no pasa nada. No hay retroalimentación emocional del abandono.</p>
+        </div>
+        <div class="problem-card">
+          <div class="problem-num">02</div>
+          <div class="problem-title">Las listas generan ansiedad</div>
+          <p class="problem-desc">Ver 15 pendientes en una lista bloquea cognitivamente al usuario en lugar de motivarlo.</p>
+        </div>
+        <div class="problem-card">
+          <div class="problem-num">03</div>
+          <div class="problem-title">Sin inteligencia emocional</div>
+          <p class="problem-desc">Ninguna app existente combina tracking de hábitos con análisis del estado emocional del usuario.</p>
+        </div>
+      </div>
+      <div class="insight">
+        <p class="insight-text">"Si viera que algo se está muriendo por mi culpa, sería más consistente."<br><span style="font-size:12px;color:var(--muted);font-style:normal;font-family:'DM Sans',sans-serif">— Santiago C., 27 años, analista de datos (entrevista #2)</span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 3: USUARIOS ══════════════════════════════════ -->
+  <div class="slide" id="s3">
+    <div class="slide-inner">
+      <div class="presenter ariana">Ariana</div>
+      <div class="eyebrow">Investigación con usuarios</div>
+      <h2 class="slide-title">3 entrevistas · 3 perfiles clave</h2>
+      <div class="users-grid">
+        <div class="user-card">
+          <div class="user-icon">👩‍💻</div>
+          <div class="user-name">Nicolle M., 21 años</div>
+          <div class="user-type">Estudiante · Perfil primario</div>
+          <div class="user-quote">"Registro cosas en mil lados y termino olvidando dónde las puse."</div>
+          <p class="user-insight">→ <span class="insight-key">Necesita retroalimentación visual inmediata</span> del progreso. Prefiere celular.</p>
+        </div>
+        <div class="user-card">
+          <div class="user-icon">👨‍💼</div>
+          <div class="user-name">Santiago C., 27 años</div>
+          <div class="user-type">Profesional · Perfil secundario</div>
+          <div class="user-quote">"Cuando dejo de usar una app no pasa nada, simplemente desaparece."</div>
+          <p class="user-insight">→ <span class="insight-key">Mecánica de degradación</span> conecta con su necesidad de consecuencias tangibles.</p>
+        </div>
+        <div class="user-card">
+          <div class="user-icon">🧠</div>
+          <div class="user-name">Lucero P., 22 años</div>
+          <div class="user-type">Estudiante con TDAH · Accesibilidad</div>
+          <div class="user-quote">"Cuando veo 15 pendientes, directamente la cierro."</div>
+          <p class="user-insight">→ El bioma abstrae la carga cognitiva. <span class="insight-key">Mood cards esenciales</span> como alternativa al diario de voz.</p>
+        </div>
+      </div>
+      <div class="disc-note">
+        <p>♿ Identificamos 3 grupos con discapacidad: <strong>visual</strong> (audiodescripción + contraste WCAG AA), <strong>motriz</strong> (navegación por voz, touch targets 48dp), <strong>auditiva/habla</strong> (mood cards, haptics, closed captions).</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 4: BENCHMARK ════════════════════════════════ -->
+  <div class="slide" id="s4">
+    <div class="slide-inner">
+      <div class="presenter ariana">Ariana</div>
+      <div class="eyebrow">Análisis de apps similares</div>
+      <h2 class="slide-title">¿Qué existe y qué falta?</h2>
+      <div class="apps-grid">
+        <div class="app-card">
+          <div class="app-icon">⚔️</div>
+          <div class="app-name">Habitica</div>
+          <div class="app-pro">✓ Gamificación profunda</div>
+          <div class="app-pro">✓ Comunidad activa</div>
+          <div class="app-con">✗ Sin IA ni análisis emocional</div>
+          <div class="app-con">✗ Onboarding complejo</div>
+        </div>
+        <div class="app-card">
+          <div class="app-icon">🌳</div>
+          <div class="app-name">Forest</div>
+          <div class="app-pro">✓ Mecánica elegante</div>
+          <div class="app-pro">✓ Un solo árbol crece</div>
+          <div class="app-con">✗ Solo foco, sin hábitos</div>
+          <div class="app-con">✗ Sin IA ni estado emocional</div>
+        </div>
+        <div class="app-card">
+          <div class="app-icon">🐦</div>
+          <div class="app-name">Finch</div>
+          <div class="app-pro">✓ Vínculo emocional</div>
+          <div class="app-pro">✓ Enfoque en bienestar</div>
+          <div class="app-con">✗ Sin productividad real</div>
+          <div class="app-con">✗ Sin IA personalizada</div>
+        </div>
+        <div class="app-card">
+          <div class="app-icon">🧘</div>
+          <div class="app-name">Headspace</div>
+          <div class="app-pro">✓ Contenido profesional</div>
+          <div class="app-pro">✓ Meditación guiada</div>
+          <div class="app-con">✗ Consumo pasivo</div>
+          <div class="app-con">✗ Sin tracking de hábitos</div>
+        </div>
+      </div>
+      <div class="diff-box">
+        <p>Nuestra propuesta es la única que combina: <strong>bioma gamificado + IA emocional + voz + háptica + accesibilidad</strong> en una sola app.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 5: REQUERIMIENTOS ══════════════════════════ -->
+  <div class="slide" id="s5">
+    <div class="slide-inner" style="gap:8px">
+      <div class="presenter ariana">Ariana</div>
+      <div class="eyebrow">Requerimientos del proyecto</div>
+      <h2 class="slide-title" style="margin-bottom:8px">18 RF + 12 RNF · Alcance definido</h2>
+      <div class="req-grid">
+        <div class="req-group rf">
+          <h4>Requerimientos Funcionales — MVP</h4>
+          <div class="req-item"><span class="req-id">RF-01</span><span class="req-text">CRUD de hábitos con periodicidad y peso</span></div>
+          <div class="req-item"><span class="req-id">RF-04</span><span class="req-text">Captura de diario de voz (máx. 60s)</span></div>
+          <div class="req-item"><span class="req-id">RF-05</span><span class="req-text">Inferencia de estado de ánimo (LLM)</span></div>
+          <div class="req-item"><span class="req-id">RF-08</span><span class="req-text">Procesamiento de comandos semánticos</span></div>
+          <div class="req-item"><span class="req-id">RF-14</span><span class="req-text">Input multimodal: voz + texto + mood cards</span></div>
+          <div class="req-item"><span class="req-id">RF-15</span><span class="req-text">Retroalimentación háptica sincronizada</span></div>
+        </div>
+        <div class="req-group rnf">
+          <h4>Requerimientos No Funcionales — MVP</h4>
+          <div class="req-item"><span class="req-id">RNF-01</span><span class="req-text">Actualización del bioma en &lt; 1.5 segundos</span></div>
+          <div class="req-item"><span class="req-id">RNF-03</span><span class="req-text">Respuesta del Coach en &lt; 2 segundos</span></div>
+          <div class="req-item"><span class="req-id">RNF-05</span><span class="req-text">Mínimo 30 FPS en dispositivos de gama media</span></div>
+          <div class="req-item"><span class="req-id">RNF-06</span><span class="req-text">Arquitectura offline-first para registro</span></div>
+          <div class="req-item"><span class="req-id">RNF-07</span><span class="req-text">Cumplimiento WCAG 2.1 nivel AA</span></div>
+          <div class="req-item"><span class="req-id">RNF-09</span><span class="req-text">Audit log de decisiones del Terapeuta</span></div>
+        </div>
+      </div>
+      <div class="mvp-note">
+        <p>✓ <strong>En MVP:</strong> 18 RF + 10 RNF &nbsp;|&nbsp; ✗ <strong>Fuera del alcance:</strong> leaderboard social, monetización, integración con wearables</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 6: SOLUCIÓN ══════════════════════════════════ -->
+  <div class="slide" id="s6">
+    <div class="slide-inner">
+      <div class="presenter martin">Martín</div>
+      <div class="eyebrow">La solución</div>
+      <h2 class="slide-title">El Terrario Digital</h2>
+      <div class="solution-layout">
+        <div class="feature-list">
+          <div class="feature">
+            <div class="feat-icon">🌿</div>
+            <div>
+              <div class="feat-title">Bioma 3D adaptativo</div>
+              <div class="feat-desc">Tus hábitos hacen crecer flora; el abandono genera degradación visual progresiva. El tipo de bioma se adapta al perfil emocional detectado por la IA.</div>
+            </div>
+          </div>
+          <div class="feature">
+            <div class="feat-icon">🎙️</div>
+            <div>
+              <div class="feat-title">Diario de voz matutino</div>
+              <div class="feat-desc">60 segundos al despertar. El Terapeuta analiza prosodia y semántica para inferir tu estado y calibrar el coach del día.</div>
+            </div>
+          </div>
+          <div class="feature">
+            <div class="feat-icon">💬</div>
+            <div>
+              <div class="feat-title">Comandos semánticos</div>
+              <div class="feat-desc">"Regar el proyecto tesis" → el Coach traduce metáforas a tareas atómicas y detecta patrones de procrastinación.</div>
+            </div>
+          </div>
+          <div class="feature">
+            <div class="feat-icon">📳</div>
+            <div>
+              <div class="feat-title">Interfaces hápticas</div>
+              <div class="feat-desc">Pulsos rítmicos guían la respiración en mindfulness. Vibración diferenciada para alertas de burnout y confirmación de hábitos.</div>
+            </div>
+          </div>
+        </div>
+        <div class="bioma-viz">
+          <div class="bioma-emoji">🌲 🌸 🌿</div>
+          <div class="bioma-label">Bosque · Vitalidad 78%</div>
+          <div class="bioma-bar"><div class="bioma-fill"></div></div>
+          <div style="font-size:11px;color:var(--muted);text-align:center;line-height:1.6">
+            Cada hábito completado<br>añade densidad foliar<br><br>
+            Cada día inactivo<br>genera degradación visual
+          </div>
+          <div class="tag">UC-03 · RF-02 · RF-03</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 7: ARQUITECTURA IA ══════════════════════════ -->
+  <div class="slide" id="s7">
+    <div class="slide-inner">
+      <div class="presenter martin">Martín</div>
+      <div class="eyebrow">Arquitectura de inteligencia artificial</div>
+      <h2 class="slide-title">Dos agentes LLM especializados</h2>
+      <div class="arch-layout">
+        <div class="agent-card terapeuta">
+          <div class="agent-icon">🧘</div>
+          <div class="agent-name">Terapeuta de Bienestar</div>
+          <div class="agent-desc">Analiza diarios de voz y detecta señales de burnout. Restricciones clínicas estrictas vía system prompt.</div>
+          <div class="agent-item">Inferencia de estado de ánimo (voz + prosodia)</div>
+          <div class="agent-item">Detección de burnout tras 7 días de caída</div>
+          <div class="agent-item">Despacho de ejercicios de mindfulness</div>
+          <div class="agent-item">Audit log de cada intervención (RNF-09)</div>
+        </div>
+        <div class="center-flow">
+          <div class="flow-node"><p>Usuario<br>+ voz + texto</p></div>
+          <div class="flow-arrow">⇅</div>
+          <div class="flow-node" style="background:var(--g2)"><p>Bioma<br>3D</p></div>
+          <div class="flow-arrow">⇅</div>
+          <div class="flow-node"><p>Analíticas<br>semanales</p></div>
+        </div>
+        <div class="agent-card coach">
+          <div class="agent-icon">💼</div>
+          <div class="agent-name">Coach de Productividad</div>
+          <div class="agent-desc">Procesa comandos semánticos y detecta procrastinación. Genera reframes motivacionales contextualizados.</div>
+          <div class="agent-item">NLP de comandos metafóricos</div>
+          <div class="agent-item">Detección de procrastinación (desviación &gt;40%)</div>
+          <div class="agent-item">Fragmentación de proyectos en tareas atómicas</div>
+          <div class="agent-item">Generación de reframes cognitivos (RF-10)</div>
+        </div>
+      </div>
+      <div class="arch-note">
+        <p>Los agentes comparten el contexto del perfil del usuario pero tienen system prompts independientes. Esto evita conflictos de rol y permite calibrar sus restricciones por separado.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 8: CASOS DE USO ══════════════════════════════ -->
+  <div class="slide" id="s8">
+    <div class="slide-inner">
+      <div class="presenter cinver">Cinver</div>
+      <div class="eyebrow">Casos de uso · 6 UCs formalizados</div>
+      <h2 class="slide-title">Flujos principales del sistema</h2>
+      <div class="uc-grid">
+        <div class="uc-card">
+          <div class="uc-id">UC-01</div>
+          <div class="uc-title">Registro Multimodal de Estado Matutino</div>
+          <div class="uc-flow">El usuario graba su diario de voz o selecciona mood cards. El <strong>Terapeuta infiere su estado</strong> y adapta el bioma.</div>
+          <div class="uc-tags"><span class="uc-tag">RF-04</span><span class="uc-tag">RF-05</span><span class="uc-tag">A11y</span></div>
+        </div>
+        <div class="uc-card">
+          <div class="uc-id">UC-02</div>
+          <div class="uc-title">Orquestación Semántica y Detección de Procrastinación</div>
+          <div class="uc-flow">Comando "Regar tesis" → NLP extrae intención → <strong>Coach fragmenta y monitorea</strong>. Si desviación &gt;40%: reframe.</div>
+          <div class="uc-tags"><span class="uc-tag">RF-08</span><span class="uc-tag">RF-09</span><span class="uc-tag">RF-10</span></div>
+        </div>
+        <div class="uc-card">
+          <div class="uc-id">UC-03</div>
+          <div class="uc-title">Renderizado y Gamificación del Ecosistema 3D</div>
+          <div class="uc-flow">Hábito completado → bioma crece en &lt;1.5s. Inactividad 24h → <strong>cron job</strong> aplica degradación visual.</div>
+          <div class="uc-tags"><span class="uc-tag">RF-02</span><span class="uc-tag">RF-03</span><span class="uc-tag">LOD</span></div>
+        </div>
+        <div class="uc-card">
+          <div class="uc-id">UC-04</div>
+          <div class="uc-title">Intervenciones de Mindfulness y Alertas Hápticas</div>
+          <div class="uc-flow">7 días de caída detectados → <strong>modal de mindfulness</strong> con respiración 4-7-8 sincronizada con haptics.</div>
+          <div class="uc-tags"><span class="uc-tag">RF-06</span><span class="uc-tag">RF-15</span><span class="uc-tag">RNF-09</span></div>
+        </div>
+        <div class="uc-card">
+          <div class="uc-id">UC-05</div>
+          <div class="uc-title">Onboarding e Inicialización del Perfil</div>
+          <div class="uc-flow">Primer uso: nombre, objetivo, <strong>bioma inicial</strong>, 3 hábitos base. El coach guía en 4 pasos con voz o texto.</div>
+          <div class="uc-tags"><span class="uc-tag">RF-01</span><span class="uc-tag">RF-17</span><span class="uc-tag">A11y</span></div>
+        </div>
+        <div class="uc-card">
+          <div class="uc-id">UC-06</div>
+          <div class="uc-title">Visualización de Analíticas Semanales</div>
+          <div class="uc-flow">Dashboard con completitud, tendencia de mood y resumen del Coach. Si hay tendencias negativas, <strong>activa UC-04</strong>.</div>
+          <div class="uc-tags"><span class="uc-tag">RF-12</span><span class="uc-tag">RF-13</span><span class="uc-tag">RF-18</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 9: INTERFACES ════════════════════════════════ -->
+  <div class="slide" id="s9">
+    <div class="slide-inner">
+      <div class="presenter cinver">Cinver</div>
+      <div class="eyebrow">Especificaciones del proyecto</div>
+      <h2 class="slide-title">4 interfaces no convencionales</h2>
+      <div class="if-grid">
+        <div class="if-card nc">
+          <div class="if-icon">🌿</div>
+          <div class="if-title">Interfaz gráfica no convencional</div>
+          <div class="if-desc">Bioma 3D en lugar de listas. El estado de las tareas se interpreta visualmente a través del volumen, color y densidad de la flora. Interacciones espaciales: pan, zoom, rotación.</div>
+          <div class="if-req">RF-02 · RF-03 · UC-03</div>
+        </div>
+        <div class="if-card voz">
+          <div class="if-icon">🎙️</div>
+          <div class="if-title">Interfaz de voz</div>
+          <div class="if-desc">Diario matutino por voz (STT + prosodia). Navegación completa por comandos de voz para accesibilidad motriz. Ondas reactivas como feedback de grabación.</div>
+          <div class="if-req">RF-04 · RF-16 · UC-01</div>
+        </div>
+        <div class="if-card llm">
+          <div class="if-icon">🤖</div>
+          <div class="if-title">Interfaz con múltiples LLMs</div>
+          <div class="if-desc">Arquitectura de dos agentes: Terapeuta (análisis emocional, restricciones clínicas) y Coach (NLP semántico, reframes). Respuestas contextuales que mutan el entorno.</div>
+          <div class="if-req">RF-05 · RF-08 · RF-10</div>
+        </div>
+        <div class="if-card haptic">
+          <div class="if-icon">📳</div>
+          <div class="if-title">Interfaces hápticas</div>
+          <div class="if-desc">3 patrones distintos: confirmación de hábito (pulso breve), guía de respiración 4-7-8 (pulsos rítmicos), alerta de burnout (patrón diferenciado). Core Haptics iOS + fallback Android.</div>
+          <div class="if-req">RF-15 · UC-04</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 10: USABILIDAD ══════════════════════════════ -->
+  <div class="slide" id="s10">
+    <div class="slide-inner">
+      <div class="presenter cinver">Cinver</div>
+      <div class="eyebrow">Criterios de usabilidad</div>
+      <h2 class="slide-title">8 métricas concretas y medibles</h2>
+      <div class="us-grid">
+        <div class="us-card">
+          <div class="us-num">≥65%</div>
+          <div class="us-label">Adopción diario matutino en 14 días</div>
+          <div class="us-method">Analytics de sesiones</div>
+        </div>
+        <div class="us-card">
+          <div class="us-num">≤2 taps</div>
+          <div class="us-label">Para registrar un hábito completado</div>
+          <div class="us-method">Prueba cronometrada</div>
+        </div>
+        <div class="us-card">
+          <div class="us-num">≥40%</div>
+          <div class="us-label">Retención a 30 días (industria: 25%)</div>
+          <div class="us-method">Analytics de retención</div>
+        </div>
+        <div class="us-card">
+          <div class="us-num">≥68 pts</div>
+          <div class="us-label">SUS Score (percentil 50+)</div>
+          <div class="us-method">Cuestionario post-prueba</div>
+        </div>
+      </div>
+      <div class="us-bottom">
+        <div class="us-bottom-card">
+          <h4>Heurísticas de Nielsen</h4>
+          <p>Score ≥7/10 en visibilidad del estado del sistema y prevención de errores. Evaluación con 3 expertos.</p>
+        </div>
+        <div class="us-bottom-card">
+          <h4>Accesibilidad WCAG 2.1 AA</h4>
+          <p>0 violaciones críticas en flujos principales. Verificado con axe-core en Onboarding, Bioma y Coach.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 11: GANTT ════════════════════════════════════ -->
+  <div class="slide" id="s11">
+    <div class="slide-inner">
+      <div class="presenter cinver">Cinver</div>
+      <div class="eyebrow">Cronograma del proyecto</div>
+      <h2 class="slide-title" style="margin-bottom:8px">3 semanas · PC02 · Semanas 5, 6 y 7</h2>
+      <div class="gantt-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="task-col">Tarea</th>
+              <th class="who-col">Responsable</th>
+              <th style="width:22%">Semana 5</th>
+              <th style="width:22%">Semana 6</th>
+              <th style="width:22%">Semana 7</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="task">Entrevistas con usuarios y análisis de stakeholders</td><td class="who col-ariana">Ariana</td><td><div class="bar-cell bg-ariana" style="width:100%"></div></td><td></td><td></td></tr>
+            <tr><td class="task">Análisis PACT y requerimientos funcionales</td><td class="who col-ariana">Ariana</td><td><div class="bar-cell bg-ariana" style="width:100%"></div></td><td></td><td></td></tr>
+            <tr><td class="task">Análisis de apps similares y criterios de usabilidad</td><td class="who col-ariana">Ariana</td><td><div class="bar-cell bg-ariana" style="width:100%"></div></td><td><div class="bar-cell bg-ariana" style="width:50%"></div></td><td></td></tr>
+            <tr><td class="task">Diseño de arquitectura del sistema</td><td class="who col-martin">Martín</td><td></td><td><div class="bar-cell bg-martin" style="width:100%"></div></td><td></td></tr>
+            <tr><td class="task">Casos de uso formales y matriz de trazabilidad</td><td class="who col-martin">Martín</td><td><div class="bar-cell bg-martin" style="width:60%"></div></td><td><div class="bar-cell bg-martin" style="width:100%"></div></td><td></td></tr>
+            <tr><td class="task">Alternativas de diseño y diagrama de Gantt</td><td class="who col-cinver">Cinver</td><td></td><td><div class="bar-cell bg-cinver" style="width:100%"></div></td><td></td></tr>
+            <tr><td class="task">Setup repositorio GitHub y documentación técnica</td><td class="who col-martin">Martín</td><td></td><td><div class="bar-cell bg-martin" style="width:100%"></div></td><td></td></tr>
+            <tr><td class="task">Prototipado en Figma (9 pantallas)</td><td class="who col-ariana">Ariana</td><td></td><td></td><td><div class="bar-cell bg-ariana" style="width:100%"></div></td></tr>
+            <tr><td class="task">Diagrama de navegación entre pantallas</td><td class="who col-martin">Martín</td><td></td><td></td><td><div class="bar-cell bg-martin" style="width:100%"></div></td></tr>
+            <tr><td class="task">Revisión general y correcciones del reporte</td><td class="who col-equipo">Equipo</td><td></td><td></td><td><div class="bar-cell bg-equipo" style="width:70%"></div></td></tr>
+            <tr><td class="task">Preparación y ensayo de presentación</td><td class="who col-equipo">Equipo</td><td></td><td></td><td><div class="bar-cell bg-equipo" style="width:100%"></div></td></tr>
+          </tbody>
+        </table>
+        <div class="legend">
+          <div class="leg"><div class="leg-dot bg-ariana"></div> Ariana</div>
+          <div class="leg"><div class="leg-dot bg-martin"></div> Martín</div>
+          <div class="leg"><div class="leg-dot bg-cinver"></div> Cinver</div>
+          <div class="leg"><div class="leg-dot bg-equipo"></div> Todo el equipo</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 12: CIERRE ══════════════════════════════════ -->
+  <div class="slide" id="s12">
+    <div class="cierre-inner">
+      <div class="big-bg-leaf">🌿</div>
+      <div class="eyebrow">Próximos pasos</div>
+      <div class="big-text">
+        Un ecosistema vivo<br>que <em>crece</em> con tus hábitos.
+      </div>
+      <div class="next-grid">
+        <div class="next-item">
+          <h4>Prototipo funcional</h4>
+          <p>Semanas 7-10: desarrollo del módulo de hábitos, bioma 3D básico e integración LLM.</p>
+        </div>
+        <div class="next-item">
+          <h4>Prueba piloto</h4>
+          <p>Semanas 11-12: 5 usuarios reales, SUS score y correcciones de usabilidad.</p>
+        </div>
+        <div class="next-item">
+          <h4>Entrega final PC03</h4>
+          <p>MVP navegable con bioma funcional, Coach activo y métricas de usabilidad medidas.</p>
+        </div>
+      </div>
+      <div class="final-line">CC451 · PC02 · Grupo 1 &nbsp;·&nbsp; Cinver Espinoza · Martin Centeno · Ariana Mercado &nbsp;·&nbsp; UNI 2026</div>
+    </div>
+  </div>
+
+
+  <!-- ═══ SLIDE 10b: WIREFRAMES ══════════════════════════════ -->
+  <div class="slide" id="s_wf">
+    <div class="slide-inner" style="gap:12px">
+      <div class="eyebrow">Prototipo de fidelidad media</div>
+      <h2 class="slide-title" style="margin-bottom:4px">Pantallas principales — 9 wireframes en Figma</h2>
+      <div class="wf-grid">
+        <div class="wf-phone">
+      <div class="wf-frame"><svg xmlns="http://www.w3.org/2000/svg" width="375" height="812" viewBox="0 0 375 812">
+  <defs>
+    <clipPath id="clip"><rect x="8" y="8" width="359" height="796" rx="32"/></clipPath>
+    <style>text{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}</style>
+  </defs>
+  <rect width="375" height="812" rx="40" fill="#1C1C1E"/>
+  <rect x="138" y="14" width="99" height="10" rx="5" fill="#2a2a2a"/>
+  <g clip-path="url(#clip)">
+    <rect x="8" y="8" width="359" height="796" rx="32" fill="#FFFFFF"/>
+    <rect x="8" y="8" width="359" height="28" fill="#1A5C38"/>
+<text x="24" y="26" font-size="10" font-weight="700" fill="#FFFFFF">9:41</text>
+<text x="345" y="26" font-size="10" fill="#FFFFFF" text-anchor="end">●●● 🔋</text><rect x="8" y="36" width="359" height="40" fill="#1A5C38"/>
+<line x1="8" y1="76" x2="367" y2="76" stroke="#E5E7EB"/>
+<text x="24" y="61" font-size="13" font-weight="700" fill="#FFFFFF">🌿  Mi Terrario</text><text x="351" y="60" font-size="15" fill="#FFFFFF" text-anchor="end">🔔</text><rect x="24" y="90" width="327" height="170" rx="14" fill="#D8F3DC" stroke="#52B788"/><text x="187" y="155" font-size="20" font-weight="400" fill="#111827" text-anchor="middle">🌲  🌸  🌿  🍄  🌱</text><text x="187" y="185" font-size="10" font-weight="600" fill="#1A5C38" text-anchor="middle">Bosque · Vitalidad 78%</text><rect x="24" y="200" width="327" height="6" rx="4" fill="#E5E7EB" stroke="#E5E7EB"/><rect x="24" y="200" width="255" height="6" rx="4" fill="#2E7D52" stroke="#2E7D52"/><text x="24" y="215" font-size="8" font-weight="400" fill="#6B7280" text-anchor="start">0%</text><text x="351" y="215" font-size="8" font-weight="400" fill="#6B7280" text-anchor="end">100%</text><rect x="24" y="228" width="103" height="52" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/><text x="75" y="250" font-size="14" font-weight="700" fill="#1A5C38" text-anchor="middle">5 / 7</text><text x="75" y="264" font-size="8" font-weight="400" fill="#6B7280" text-anchor="middle">Hábitos hoy</text><rect x="135" y="228" width="103" height="52" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/><text x="186" y="250" font-size="14" font-weight="700" fill="#1A5C38" text-anchor="middle">12 🔥</text><text x="186" y="264" font-size="8" font-weight="400" fill="#6B7280" text-anchor="middle">Racha</text><rect x="246" y="228" width="103" height="52" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/><text x="297" y="250" font-size="14" font-weight="700" fill="#1A5C38" text-anchor="middle">😤</text><text x="297" y="264" font-size="8" font-weight="400" fill="#6B7280" text-anchor="middle">Estado</text><rect x="24" y="292" width="327" height="50" rx="10" fill="#D8F3DC" stroke="#52B788"/><text x="36" y="310" font-size="10" font-weight="700" fill="#1A5C38" text-anchor="start">💬  Coach:</text><text x="36" y="326" font-size="10" font-weight="400" fill="#374151" text-anchor="start">"Buen ritmo. ¿Regamos la tesis hoy?"</text><text x="345" y="326" font-size="12" font-weight="700" fill="#1A5C38" text-anchor="end">→</text><text x="24" y="358" font-size="11" font-weight="700" fill="#111827" text-anchor="start">Acciones rápidas</text><rect x="24" y="368" width="155" height="36" rx="8" fill="#1A5C38" stroke="#1A5C38"/><text x="101" y="390" font-size="10" font-weight="700" fill="#FFFFFF" text-anchor="middle">🎙️ Diario matutino</text><rect x="195" y="368" width="155" height="36" rx="8" fill="#FFFFFF" stroke="#1A5C38"/><text x="272" y="390" font-size="10" font-weight="700" fill="#1A5C38" text-anchor="middle">✅ Marcar hábito</text><text x="24" y="424" font-size="11" font-weight="700" fill="#111827" text-anchor="start">Pendientes hoy</text><text x="24" y="452" font-size="10" font-weight="600" fill="#1A5C38" text-anchor="start">✓ 📖 Leer 30 min</text><rect x="24" y="456" width="327" height="4" rx="4" fill="#E5E7EB" stroke="#E5E7EB"/><rect x="24" y="456" width="327" height="4" rx="4" fill="#2E7D52" stroke="#2E7D52"/><text x="24" y="482" font-size="10" font-weight="600" fill="#1A5C38" text-anchor="start">✓ 🏃 Ejercicio</text><rect x="24" y="486" width="327" height="4" rx="4" fill="#E5E7EB" stroke="#E5E7EB"/><rect x="24" y="486" width="327" height="4" rx="4" fill="#2E7D52" stroke="#2E7D52"/><text x="24" y="512" font-size="10" font-weight="600" fill="#374151" text-anchor="start">○ 📝 Avanzar tesis</text><rect x="24" y="516" width="327" height="4" rx="4" fill="#E5E7EB" stroke="#E5E7EB"/><rect x="24" y="516" width="98" height="4" rx="4" fill="#2E7D52" stroke="#2E7D52"/><rect x="8" y="760" width="359" height="44" fill="#FFFFFF"/><line x1="8" y1="760" x2="367" y2="760" stroke="#E5E7EB"/><text x="52" y="776" font-size="14" text-anchor="middle" fill="#1A5C38">🌿</text><text x="52" y="789" font-size="8" font-weight="600" text-anchor="middle" fill="#1A5C38">Bioma</text><text x="141" y="776" font-size="14" text-anchor="middle" fill="#6B7280">✅</text><text x="141" y="789" font-size="8" font-weight="600" text-anchor="middle" fill="#6B7280">Hábitos</text><text x="230" y="776" font-size="14" text-anchor="middle" fill="#6B7280">💬</text><text x="230" y="789" font-size="8" font-weight="600" text-anchor="middle" fill="#6B7280">Coach</text><text x="319" y="776" font-size="14" text-anchor="middle" fill="#6B7280">📊</text><text x="319" y="789" font-size="8" font-weight="600" text-anchor="middle" fill="#6B7280">Stats</text>
+  </g>
+</svg></div>
+      <div class="wf-label"><span class="wf-uc">UC-03</span>Bioma Principal</div>
+    </div>
+        <div class="wf-phone">
+      <div class="wf-frame"><svg xmlns="http://www.w3.org/2000/svg" width="375" height="812" viewBox="0 0 375 812">
+  <defs>
+    <clipPath id="clip"><rect x="8" y="8" width="359" height="796" rx="32"/></clipPath>
+    <style>text{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}</style>
+  </defs>
+  <rect width="375" height="812" rx="40" fill="#1C1C1E"/>
+  <rect x="138" y="14" width="99" height="10" rx="5" fill="#2a2a2a"/>
+  <g clip-path="url(#clip)">
+    <rect x="8" y="8" width="359" height="796" rx="32" fill="#DBEAFE"/>
+    <rect x="8" y="8" width="359" height="28" fill="#1E3A5F"/>
+<text x="24" y="26" font-size="10" font-weight="700" fill="#FFFFFF">9:41</text>
+<text x="345" y="26" font-size="10" fill="#FFFFFF" text-anchor="end">●●● 🔋</text><rect x="8" y="8" width="359" height="796" rx="32" fill="#DBEAFE" stroke="#DBEAFE"/><rect x="8" y="36" width="359" height="40" fill="#1E3A5F"/>
+<line x1="8" y1="76" x2="367" y2="76" stroke="#E5E7EB"/>
+<text x="24" y="61" font-size="13" font-weight="700" fill="#FFFFFF">🎙️  Diario Matutino</text><text x="351" y="60" font-size="15" fill="#FFFFFF" text-anchor="end">✕</text><text x="187" y="102" font-size="9" font-weight="400" fill="#2563EB" text-anchor="middle">Martes, 6 de mayo · 7:02 AM</text><text x="187" y="120" font-size="14" font-weight="700" fill="#111827" text-anchor="middle">¿Cómo te sientes hoy?</text><rect x="151" y="138" width="72" height="72" rx="36" fill="#1A5C38" stroke="#1A5C38"/><text x="187" y="180" font-size="24" font-weight="400" fill="#FFFFFF" text-anchor="middle">🎙️</text><rect x="24" y="222" width="327" height="24" rx="8" fill="#DBEAFE" stroke="#2563EB"/><text x="187" y="238" font-size="9" font-weight="600" fill="#2563EB" text-anchor="middle">〰️  Escuchando... 0:08</text><line x1="24" y1="260" x2="351" y2="260" stroke="#E5E7EB"/><text x="187" y="276" font-size="9" font-weight="400" fill="#6B7280" text-anchor="middle">— o elige tu estado de ánimo —</text><rect x="24" y="285" width="159" height="56" rx="10" fill="#D8F3DC" stroke="#1A5C38"/><text x="103" y="311" font-size="20" font-weight="400" fill="#111827" text-anchor="middle">😤</text><text x="103" y="331" font-size="9" font-weight="600" fill="#1A5C38" text-anchor="middle">Enfocado</text><rect x="191" y="285" width="159" height="56" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/><text x="270" y="311" font-size="20" font-weight="400" fill="#111827" text-anchor="middle">😰</text><text x="270" y="331" font-size="9" font-weight="600" fill="#6B7280" text-anchor="middle">Ansioso</text><rect x="24" y="350" width="159" height="56" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/><text x="103" y="376" font-size="20" font-weight="400" fill="#111827" text-anchor="middle">😴</text><text x="103" y="396" font-size="9" font-weight="600" fill="#6B7280" text-anchor="middle">Cansado</text><rect x="191" y="350" width="159" height="56" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/><text x="270" y="376" font-size="20" font-weight="400" fill="#111827" text-anchor="middle">🤩</text><text x="270" y="396" font-size="9" font-weight="600" fill="#6B7280" text-anchor="middle">Motivado</text><rect x="24" y="418" width="327" height="36" rx="8" fill="#FFFFFF" stroke="#E5E7EB"/><text x="36" y="440" font-size="9" font-weight="400" fill="#6B7280" text-anchor="start">O escribe cómo te sientes hoy...</text><text x="187" y="475" font-size="8" font-weight="400" fill="#6B7280" text-anchor="middle">Ambas entradas son equivalentes · RF-14</text><rect x="24" y="490" width="327" height="40" rx="10" fill="#1A5C38" stroke="#1A5C38"/><text x="187" y="514" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">✓  Registrar estado del día</text><text x="187" y="548" font-size="8" font-weight="400" fill="#6B7280" text-anchor="middle">El Terapeuta de Bienestar analizará</text><text x="187" y="560" font-size="8" font-weight="400" fill="#6B7280" text-anchor="middle">tu estado y adaptará el bioma</text>
+  </g>
+</svg></div>
+      <div class="wf-label"><span class="wf-uc">UC-01</span>Diario Matutino</div>
+    </div>
+        <div class="wf-phone">
+      <div class="wf-frame"><svg xmlns="http://www.w3.org/2000/svg" width="375" height="812" viewBox="0 0 375 812">
+  <defs>
+    <clipPath id="clip"><rect x="8" y="8" width="359" height="796" rx="32"/></clipPath>
+    <style>text{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}</style>
+  </defs>
+  <rect width="375" height="812" rx="40" fill="#1C1C1E"/>
+  <rect x="138" y="14" width="99" height="10" rx="5" fill="#2a2a2a"/>
+  <g clip-path="url(#clip)">
+    <rect x="8" y="8" width="359" height="796" rx="32" fill="#DBEAFE"/>
+    <rect x="8" y="8" width="359" height="28" fill="#1E3A5F"/>
+<text x="24" y="26" font-size="10" font-weight="700" fill="#FFFFFF">9:41</text>
+<text x="345" y="26" font-size="10" fill="#FFFFFF" text-anchor="end">●●● 🔋</text><text x="24" y="60" font-size="15" fill="#FFFFFF">←</text><rect x="8" y="36" width="359" height="40" fill="#1E3A5F"/>
+<line x1="8" y1="76" x2="367" y2="76" stroke="#E5E7EB"/>
+<text x="24" y="61" font-size="13" font-weight="700" fill="#FFFFFF">💬  Coach de Productividad</text><text x="351" y="60" font-size="15" fill="#FFFFFF" text-anchor="end">⋮</text><rect x="8" y="76" width="359" height="728" rx="0" fill="#DBEAFE" stroke="#DBEAFE"/><rect x="24" y="100" width="255" height="44" rx="10" fill="#FFFFFF" stroke="#52B788"/><text x="34" y="116" font-size="9" font-weight="400" fill="#111827" text-anchor="start">¡Buenos días! Hoy me indicaste que est</text><text x="34" y="130" font-size="9" font-weight="400" fill="#111827" text-anchor="start">ás enfocado. ¿Con qué empezamos?</text><rect x="96" y="160" width="255" height="28" rx="10" fill="#1A5C38" stroke="#1A5C38"/><text x="106" y="176" font-size="9" font-weight="400" fill="#FFFFFF" text-anchor="start">Regar el proyecto tesis</text><rect x="24" y="196" width="255" height="60" rx="10" fill="#FFFFFF" stroke="#52B788"/><text x="34" y="212" font-size="9" font-weight="400" fill="#111827" text-anchor="start">Entendido 🌿 Analicé tu historial. Llev</text><text x="34" y="226" font-size="9" font-weight="400" fill="#111827" text-anchor="start">as 3 días sin avanzar. ¿Tienes 2h esta</text><text x="34" y="240" font-size="9" font-weight="400" fill="#111827" text-anchor="start"> mañana?</text><rect x="96" y="266" width="255" height="28" rx="10" fill="#1A5C38" stroke="#1A5C38"/><text x="106" y="282" font-size="9" font-weight="400" fill="#FFFFFF" text-anchor="start">Sí, tengo la mañana libre</text><rect x="24" y="296" width="327" height="80" rx="10" fill="#FFFFFF" stroke="#2563EB"/><text x="36" y="312" font-size="10" font-weight="700" fill="#1E3A5F" text-anchor="start">📋  Tareas generadas para 'Tesis':</text><text x="36" y="328" font-size="9" font-weight="400" fill="#374151" text-anchor="start">· Revisar avance cap. 2  (30 min)</text><text x="36" y="342" font-size="9" font-weight="400" fill="#374151" text-anchor="start">· Escribir introducción  (60 min)</text><text x="36" y="356" font-size="9" font-weight="400" fill="#374151" text-anchor="start">· Actualizar bibliografía (30 min)</text><rect x="24" y="390" width="327" height="28" rx="8" fill="#FEF3C7" stroke="#D35400"/><text x="187" y="409" font-size="9" font-weight="600" fill="#D35400" text-anchor="middle">⚠ Desviación 40%+ detectada — Reframe generado</text><rect x="24" y="716" width="327" height="36" rx="8" fill="#FFFFFF" stroke="#E5E7EB"/><text x="36" y="739" font-size="9" font-weight="400" fill="#6B7280" text-anchor="start">Escribe o dicta un comando...</text><rect x="319" y="716" width="32" height="36" rx="8" fill="#1A5C38" stroke="#1A5C38"/><text x="335" y="739" font-size="12" font-weight="700" fill="#FFFFFF" text-anchor="middle">➤</text><rect x="24" y="760" width="32" height="32" rx="8" fill="#F9FAFB" stroke="#E5E7EB"/><text x="40" y="781" font-size="14" font-weight="400" fill="#374151" text-anchor="middle">🎙️</text><text x="62" y="781" font-size="10" font-weight="400" fill="#6B7280" text-anchor="start">Dictar comando de voz</text>
+  </g>
+</svg></div>
+      <div class="wf-label"><span class="wf-uc">UC-02</span>Coach de Productividad</div>
+    </div>
+        <div class="wf-phone">
+      <div class="wf-frame"><svg xmlns="http://www.w3.org/2000/svg" width="375" height="812" viewBox="0 0 375 812">
+  <defs>
+    <clipPath id="clip"><rect x="8" y="8" width="359" height="796" rx="32"/></clipPath>
+    <style>text{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}</style>
+  </defs>
+  <rect width="375" height="812" rx="40" fill="#1C1C1E"/>
+  <rect x="138" y="14" width="99" height="10" rx="5" fill="#2a2a2a"/>
+  <g clip-path="url(#clip)">
+    <rect x="8" y="8" width="359" height="796" rx="32" fill="#EDE9FE"/>
+    <rect x="8" y="8" width="359" height="796" rx="32" fill="#EDE9FE" stroke="#EDE9FE"/><rect x="8" y="8" width="359" height="28" fill="#EDE9FE"/>
+<text x="24" y="26" font-size="10" font-weight="700" fill="#5B21B6">9:41</text>
+<text x="345" y="26" font-size="10" fill="#5B21B6" text-anchor="end">●●● 🔋</text><rect x="8" y="36" width="359" height="40" fill="#5B21B6"/>
+<line x1="8" y1="76" x2="367" y2="76" stroke="#E5E7EB"/>
+<text x="24" y="61" font-size="13" font-weight="700" fill="#FFFFFF">🧘  Momento de calma</text><text x="351" y="60" font-size="15" fill="#FFFFFF" text-anchor="end">✕</text><rect x="24" y="92" width="327" height="40" rx="10" fill="#FFFFFF" stroke="#5B21B6"/><text x="36" y="108" font-size="8" font-weight="700" fill="#5B21B6" text-anchor="start">🤖  El Terapeuta detectó señales de agotamiento</text><text x="36" y="122" font-size="8" font-weight="400" fill="#374151" text-anchor="start">Llevas 7 días con baja completitud</text><text x="187" y="150" font-size="12" font-weight="700" fill="#111827" text-anchor="middle">Técnica de Respiración 4-7-8</text><text x="187" y="166" font-size="9" font-weight="400" fill="#6B7280" text-anchor="middle">Sigue el ritmo del círculo</text><rect x="135" y="180" width="104" height="104" rx="52" fill="#D8F3DC" stroke="#52B788"/><rect x="149" y="194" width="76" height="76" rx="38" fill="#1A5C38" stroke="#1A5C38"/><text x="187" y="237" font-size="10" font-weight="700" fill="#FFFFFF" text-anchor="middle">Inhala</text><text x="187" y="252" font-size="14" font-weight="700" fill="#FFFFFF" text-anchor="middle">4 seg</text><rect x="24" y="298" width="327" height="28" rx="8" fill="#EDE9FE" stroke="#5B21B6"/><text x="187" y="316" font-size="9" font-weight="600" fill="#5B21B6" text-anchor="middle">📳  Guía háptica activada · Ciclo 1 de 3</text><rect x="58" y="336" width="40" height="40" rx="8" fill="#EDE9FE" stroke="#5B21B6"/><text x="78" y="352" font-size="11" font-weight="700" fill="#5B21B6" text-anchor="middle">4s</text><text x="78" y="368" font-size="8" font-weight="400" fill="#6B7280" text-anchor="middle">Inhalar</text><rect x="167" y="336" width="40" height="40" rx="8" fill="#FFFFFF" stroke="#E5E7EB"/><text x="187" y="352" font-size="11" font-weight="700" fill="#E5E7EB" text-anchor="middle">7s</text><text x="187" y="368" font-size="8" font-weight="400" fill="#6B7280" text-anchor="middle">Retener</text><rect x="276" y="336" width="40" height="40" rx="8" fill="#FFFFFF" stroke="#1A5C38"/><text x="296" y="352" font-size="11" font-weight="700" fill="#1A5C38" text-anchor="middle">8s</text><text x="296" y="368" font-size="8" font-weight="400" fill="#6B7280" text-anchor="middle">Exhalar</text><rect x="24" y="392" width="327" height="8" rx="4" fill="#E5E7EB" stroke="#E5E7EB"/><rect x="24" y="392" width="107" height="8" rx="4" fill="#5B21B6" stroke="#5B21B6"/><text x="24" y="408" font-size="8" font-weight="400" fill="#6B7280" text-anchor="start">Progreso del ciclo</text><text x="351" y="408" font-size="8" font-weight="400" fill="#5B21B6" text-anchor="end">1 / 3 ciclos</text><rect x="24" y="424" width="327" height="36" rx="10" fill="#5B21B6" stroke="#5B21B6"/><text x="187" y="446" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">Pausar ejercicio</text><rect x="24" y="468" width="327" height="28" rx="8" fill="#FFFFFF" stroke="#5B21B6"/><text x="187" y="486" font-size="10" font-weight="400" fill="#5B21B6" text-anchor="middle">Saltar</text><text x="187" y="522" font-size="7" font-weight="400" fill="#6B7280" text-anchor="middle">Este ejercicio fue sugerido por el Terapeuta · UC-04</text><text x="187" y="534" font-size="7" font-weight="400" fill="#6B7280" text-anchor="middle">Las respuestas generadas siguen pautas clínicas · RNF-09</text>
+  </g>
+</svg></div>
+      <div class="wf-label"><span class="wf-uc">UC-04</span>Módulo Mindfulness</div>
+    </div>
+      </div>
+      <div class="wf-note">
+        <span>🔗 Prototipo navegable completo en Figma · 9 pantallas conectadas con flujos de prototipo</span>
+        <span class="wf-link">figma.com/design/bEQBU5VZhY4EPSP2lylNCM/PC2</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 10c: DIAGRAMA DE NAVEGACIÓN ══════════════════ -->
+  <div class="slide" id="s_nav">
+    <div class="slide-inner" style="gap:12px">
+      <div class="eyebrow">Flujo de la aplicación</div>
+      <h2 class="slide-title" style="margin-bottom:4px">Diagrama de navegación entre pantallas</h2>
+      <div class="nav-diagram">
+        <svg viewBox="0 0 900 400" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
+          <defs>
+            <marker id="ag" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+              <polygon points="0 0,7 3.5,0 7" fill="#52B788"/>
+            </marker>
+            <marker id="ap" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+              <polygon points="0 0,7 3.5,0 7" fill="#A78BFA"/>
+            </marker>
+          </defs>
+
+          <!-- ONBOARDING -->
+          <rect x="20" y="155" width="120" height="52" rx="10" fill="#D35400" opacity=".9"/>
+          <text x="80" y="174" font-family="DM Sans,sans-serif" font-size="11" font-weight="700" fill="white" text-anchor="middle">🌱 Onboarding</text>
+          <text x="80" y="190" font-family="DM Mono,monospace" font-size="8" fill="rgba(255,255,255,.7)" text-anchor="middle">UC-05</text>
+          <text x="80" y="202" font-family="DM Mono,monospace" font-size="8" fill="rgba(255,255,255,.6)" text-anchor="middle">1ª vez</text>
+
+          <!-- BIOMA PRINCIPAL (center) -->
+          <rect x="370" y="170" width="160" height="56" rx="10" fill="#1A5C38"/>
+          <rect x="370" y="170" width="160" height="56" rx="10" fill="none" stroke="#52B788" stroke-width="2"/>
+          <text x="450" y="193" font-family="DM Sans,sans-serif" font-size="12" font-weight="700" fill="white" text-anchor="middle">🌿 Bioma Principal</text>
+          <text x="450" y="208" font-family="DM Mono,monospace" font-size="8" fill="#95D5B2" text-anchor="middle">UC-03 · Home</text>
+          <text x="450" y="220" font-family="DM Mono,monospace" font-size="8" fill="rgba(255,255,255,.5)" text-anchor="middle">RF-02 · RF-03</text>
+
+          <!-- MINDFULNESS (top) -->
+          <rect x="350" y="24" width="200" height="52" rx="10" fill="#5B21B6" opacity=".9"/>
+          <text x="450" y="44" font-family="DM Sans,sans-serif" font-size="11" font-weight="700" fill="white" text-anchor="middle">🧘 Mindfulness</text>
+          <text x="450" y="60" font-family="DM Mono,monospace" font-size="8" fill="rgba(255,255,255,.7)" text-anchor="middle">UC-04 · Modal · RF-06 · RF-15</text>
+          <text x="450" y="72" font-family="DM Mono,monospace" font-size="8" fill="#C4B5FD" text-anchor="middle">Disparado por sistema IA</text>
+
+          <!-- DIARIO (top-left) -->
+          <rect x="150" y="50" width="160" height="48" rx="10" fill="#1E3A5F" opacity=".95"/>
+          <text x="230" y="70" font-family="DM Sans,sans-serif" font-size="11" font-weight="700" fill="white" text-anchor="middle">🎙️ Diario Matutino</text>
+          <text x="230" y="85" font-family="DM Mono,monospace" font-size="8" fill="#93C5FD" text-anchor="middle">UC-01 · RF-04 · RF-05</text>
+
+          <!-- COACH (bottom-left) -->
+          <rect x="150" y="300" width="160" height="48" rx="10" fill="#1E3A5F" opacity=".95"/>
+          <text x="230" y="320" font-family="DM Sans,sans-serif" font-size="11" font-weight="700" fill="white" text-anchor="middle">💬 Coach</text>
+          <text x="230" y="335" font-family="DM Mono,monospace" font-size="8" fill="#93C5FD" text-anchor="middle">UC-02 · RF-08 · RF-09</text>
+
+          <!-- REFRAME (bottom) -->
+          <rect x="130" y="380" width="130" height="14" rx="4" fill="#4C1D95" opacity=".8"/>
+          <text x="195" y="391" font-family="DM Mono,monospace" font-size="7" fill="#DDD6FE" text-anchor="middle">💡 Reframe Card · UC-02</text>
+
+          <!-- HABITOS (top-right) -->
+          <rect x="600" y="50" width="150" height="48" rx="10" fill="rgba(55,65,81,.9)" stroke="#4B5563" stroke-width="1"/>
+          <text x="675" y="70" font-family="DM Sans,sans-serif" font-size="11" font-weight="700" fill="white" text-anchor="middle">✅ Hábitos</text>
+          <text x="675" y="85" font-family="DM Mono,monospace" font-size="8" fill="#D1FAE5" text-anchor="middle">UC-05 · RF-01</text>
+
+          <!-- ANALITICAS (bottom-right) -->
+          <rect x="600" y="300" width="150" height="48" rx="10" fill="rgba(55,65,81,.9)" stroke="#4B5563" stroke-width="1"/>
+          <text x="675" y="320" font-family="DM Sans,sans-serif" font-size="11" font-weight="700" fill="white" text-anchor="middle">📊 Analíticas</text>
+          <text x="675" y="335" font-family="DM Mono,monospace" font-size="8" fill="#D1FAE5" text-anchor="middle">UC-06 · RF-12</text>
+
+          <!-- CONFIG (far right) -->
+          <rect x="760" y="170" width="120" height="48" rx="10" fill="rgba(55,65,81,.7)" stroke="#4B5563" stroke-width="1"/>
+          <text x="820" y="190" font-family="DM Sans,sans-serif" font-size="11" font-weight="700" fill="white" text-anchor="middle">⚙️ Config</text>
+          <text x="820" y="206" font-family="DM Mono,monospace" font-size="8" fill="#D1FAE5" text-anchor="middle">RF-17 · A11y</text>
+
+          <!-- ARROWS - user navigation (green) -->
+          <!-- Onboarding → Bioma -->
+          <path d="M140,181 C230,181 300,198 368,198" stroke="#52B788" stroke-width="1.8" fill="none" marker-end="url(#ag)"/>
+          <!-- Bioma → Diario -->
+          <path d="M410,170 C360,130 290,100 312,74" stroke="#52B788" stroke-width="1.5" fill="none" marker-end="url(#ag)"/>
+          <!-- Diario → Bioma -->
+          <path d="M310,80 C350,100 380,140 370,185" stroke="#52B788" stroke-width="1.5" fill="none" marker-end="url(#ag)" stroke-dasharray="4 2"/>
+          <!-- Bioma → Habitos -->
+          <path d="M530,185 C560,165 580,90 598,74" stroke="#52B788" stroke-width="1.5" fill="none" marker-end="url(#ag)"/>
+          <!-- Habitos → Bioma -->
+          <path d="M600,82 C580,120 560,160 532,190" stroke="#52B788" stroke-width="1.5" fill="none" marker-end="url(#ag)" stroke-dasharray="4 2"/>
+          <!-- Bioma → Coach -->
+          <path d="M420,226 C370,260 300,300 312,324" stroke="#52B788" stroke-width="1.5" fill="none" marker-end="url(#ag)"/>
+          <!-- Coach → Bioma -->
+          <path d="M310,310 C330,280 370,250 368,226" stroke="#52B788" stroke-width="1.5" fill="none" marker-end="url(#ag)" stroke-dasharray="4 2"/>
+          <!-- Bioma → Analiticas -->
+          <path d="M530,215 C565,250 590,310 598,322" stroke="#52B788" stroke-width="1.5" fill="none" marker-end="url(#ag)"/>
+          <!-- Bioma → Config -->
+          <path d="M530,198 C620,198 700,194 758,194" stroke="#52B788" stroke-width="1.5" fill="none" marker-end="url(#ag)"/>
+
+          <!-- ARROWS - system (purple dashed) -->
+          <!-- Bioma → Mindfulness (system) -->
+          <path d="M450,170 L450,78" stroke="#A78BFA" stroke-width="1.8" fill="none" marker-end="url(#ap)" stroke-dasharray="6 3"/>
+          <!-- Coach → Reframe (system) -->
+          <path d="M230,348 L230,378" stroke="#A78BFA" stroke-width="1.8" fill="none" marker-end="url(#ap)" stroke-dasharray="6 3"/>
+
+          <!-- LABELS -->
+          <text x="260" y="175" font-family="DM Sans,sans-serif" font-size="9" fill="#95D5B2">Primer uso</text>
+          <text x="355" y="150" font-family="DM Sans,sans-serif" font-size="9" fill="#95D5B2">Diario del día</text>
+          <text x="563" y="145" font-family="DM Sans,sans-serif" font-size="9" fill="#95D5B2">Hábitos</text>
+          <text x="320" y="280" font-family="DM Sans,sans-serif" font-size="9" fill="#95D5B2">Coach</text>
+          <text x="553" y="275" font-family="DM Sans,sans-serif" font-size="9" fill="#95D5B2">Stats</text>
+          <text x="460" y="135" font-family="DM Sans,sans-serif" font-size="9" fill="#A78BFA">Sistema: burnout</text>
+          <text x="165" y="370" font-family="DM Sans,sans-serif" font-size="9" fill="#A78BFA">Procrastinación</text>
+
+          <!-- LEGEND -->
+          <line x1="20" y1="390" x2="50" y2="390" stroke="#52B788" stroke-width="1.5"/>
+          <text x="55" y="394" font-family="DM Sans,sans-serif" font-size="9" fill="#7A9980">Navegación del usuario</text>
+          <line x1="200" y1="390" x2="230" y2="390" stroke="#A78BFA" stroke-width="1.5" stroke-dasharray="5 2"/>
+          <text x="235" y="394" font-family="DM Sans,sans-serif" font-size="9" fill="#7A9980">Transición del sistema (IA)</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div><!-- /deck -->
+
+<!-- NAVIGATION -->
+<div class="click-prev" id="prev"></div>
+<div class="click-next" id="next"></div>
+<div class="progress" id="progress"></div>
+<div class="slide-counter" id="counter">1 / 14</div>
+<div class="nav-hint">← → para navegar &nbsp;·&nbsp; <span>Click izquierdo</span> avanza</div>
+
+<script>
+// Particles
+const pContainer = document.getElementById('particles');
+for(let i=0;i<25;i++){
+  const p=document.createElement('div');
+  p.className='p';
+  const x=Math.random()*100;
+  const dur=8+Math.random()*12;
+  const delay=-Math.random()*20;
+  const drift=(Math.random()-0.5)*200+'px';
+  const size=1+Math.random()*3;
+  p.style.cssText=`left:${x}%;--drift:${drift};animation-duration:${dur}s;animation-delay:${delay}s;width:${size}px;height:${size}px`;
+  pContainer.appendChild(p);
+}
+
+// Slides
+const slides=document.querySelectorAll('.slide');
+const prog=document.getElementById('progress');
+const counter=document.getElementById('counter');
+let cur=0;
+const total=slides.length;
+
+function goTo(n){
+  if(n<0||n>=total)return;
+  slides[cur].classList.remove('active');
+  slides[cur].classList.add('out');
+  setTimeout(()=>slides[cur].classList.remove('out'),500);
+  cur=n;
+  slides[cur].classList.add('active');
+  prog.style.width=((cur+1)/total*100)+'%';
+  counter.textContent=(cur+1)+' / '+total;
+}
+
+document.getElementById('next').addEventListener('click',()=>goTo(cur+1));
+document.getElementById('prev').addEventListener('click',()=>goTo(cur-1));
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key===' ')goTo(cur+1);
+  if(e.key==='ArrowLeft'||e.key==='ArrowUp')goTo(cur-1);
+});
+
+// Init progress
+prog.style.width=((1)/total*100)+'%';
+</script>
+</body>
+</html>
