@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🌿 Terrario Digital de Hábitos y Bienestar
+# Terrario Digital de Hábitos y Bienestar
 
 **CC451 — Interacción Humano Computador · PC03 · Grupo 1**
 Universidad Nacional de Ingeniería · Lima, Perú · 2025
@@ -13,7 +13,7 @@ Universidad Nacional de Ingeniería · Lima, Perú · 2025
 
 ---
 
-## 📋 Descripción
+## Descripción
 
 **Terrario Digital** es una aplicación web donde tus hábitos diarios construyen un
 ecosistema 3D vivo. Completar tareas hace crecer la flora; abandonarlas degrada el
@@ -21,11 +21,13 @@ bioma visualmente. El entorno (bosque, desierto, jardín zen) se adapta a tu per
 emocional, inferido por IA a partir de un diario de voz.
 
 Es una aplicación con **interfaces no convencionales** que corre en una laptop
-convencional (navegador) y es responsive para móvil.
+convencional (navegador), es responsive y se puede **instalar como PWA** en el
+móvil (con ícono propio y pantalla completa). Cada bioma tiene su propia flora:
+🌲 árboles en el bosque, 🌵 cactus en el desierto y 🌸 flores en el jardín zen.
 
 ---
 
-## 🎯 Capacidades obligatorias y módulos
+## Capacidades obligatorias y módulos
 
 ### Interfaces obligatorias
 
@@ -47,7 +49,7 @@ convencional (navegador) y es responsive para móvil.
 
 ---
 
-## 🧱 Stack tecnológico
+## Stack tecnológico
 
 | Capa | Tecnología |
 |---|---|
@@ -65,12 +67,10 @@ convencional (navegador) y es responsive para móvil.
 > modelos no cambian.
 
 ---
-
-## 🚀 Cómo correr el proyecto
-
 ### Requisitos
 
 - **Node.js 20+** y **npm**
+- **Git**
 - Un navegador basado en Chromium (Chrome/Edge) para el dictado por voz
 
 ### 1. Instalar dependencias
@@ -79,11 +79,15 @@ convencional (navegador) y es responsive para móvil.
 npm install
 ```
 
+> `npm install` también genera el cliente de Prisma automáticamente (`postinstall`).
+
 ### 2. Preparar la base de datos
 
+SQLite — no hay que instalar ninguna base de datos.
+
 ```bash
-npx prisma migrate dev   # crea la base SQLite y aplica el esquema
-npx tsx prisma/seed.ts    # carga datos simulados de demostración
+npm run db:migrate   # crea la base SQLite y aplica el esquema
+npm run db:seed      # carga datos simulados de demostración
 ```
 
 ### 3. Configurar la clave de Gemini (opcional pero recomendado)
@@ -93,8 +97,6 @@ Creá un archivo **`.env.local`** en la raíz con tu clave:
 ```
 GEMINI_API_KEY=tu_clave_de_google_ai_studio
 ```
-
-Generá una clave gratis en https://aistudio.google.com/apikey
 
 > Sin clave, los agentes funcionan igual con un **stub determinista** que imita
 > los tonos. Con clave, pasan a **IA real** sin ningún otro cambio (patrón
@@ -106,11 +108,33 @@ Generá una clave gratis en https://aistudio.google.com/apikey
 npm run dev
 ```
 
-Abrí **http://localhost:3000**.
+ **http://localhost:3000**.
+
+### Scripts disponibles
+
+| Comando | Qué hace |
+|---|---|
+| `npm run dev` | Servidor de desarrollo |
+| `npm run build` / `npm run start` | Build y arranque de producción |
+| `npm run lint` | Linter (ESLint) |
+| `npm run db:migrate` | Crea / actualiza la base |
+| `npm run db:seed` | Carga datos de demostración |
+
+### 📱 Instalarla en el móvil (PWA)
+
+La app es una **PWA instalable**. Como instalar requiere HTTPS, exponé el
+servidor local con un túnel:
+
+```bash
+npx cloudflared tunnel --url http://localhost:3000
+```
+
+Abrí la URL `https://…trycloudflare.com` en el celular → menú → **"Instalar
+aplicación"**. Detalle en la [Guía del equipo](docs/GUIA-EQUIPO.md).
 
 ---
 
-## 🗺️ Pantallas
+##  Pantallas
 
 | Ruta | Pantalla | Caso de uso |
 |---|---|---|
@@ -125,7 +149,7 @@ Abrí **http://localhost:3000**.
 
 ---
 
-## 🏗️ Arquitectura
+##  Arquitectura
 
 Organización **por features** (screaming architecture), con la lógica de dominio
 pura separada de la UI y del acceso a datos.
@@ -162,7 +186,7 @@ src/
 
 ---
 
-## ♿ Accesibilidad
+##  Accesibilidad
 
 - **Entrada multimodal** (RF-14): voz, texto y mood cards como alternativas
   equivalentes en el diario.
@@ -172,7 +196,7 @@ src/
 
 ---
 
-## 👥 Equipo — Grupo 1
+##  Equipo — Grupo 1
 
 | Integrante | Aporte |
 |---|---|
@@ -189,6 +213,6 @@ Licenciado bajo **MIT**. Ver [LICENSE](LICENSE).
 <div align="center">
 
 **Universidad Nacional de Ingeniería · Facultad de Ciencias**
-CC451 Interacción Humano Computador · 2025
+CC451 Interacción Humano Computador · 2026
 
 </div>

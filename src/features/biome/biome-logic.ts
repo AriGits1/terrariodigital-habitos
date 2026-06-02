@@ -25,16 +25,42 @@ export function vitality(health: number): number {
   return clamp(health) / 100;
 }
 
-/** Ground / terrain base color per biome type. */
+/** What kind of flora grows in each biome. */
+export type PlantKind = "tree" | "cactus" | "flower";
+
+export function plantKind(type: BiomeType): PlantKind {
+  if (type === "desert") return "cactus";
+  if (type === "zen") return "flower";
+  return "tree";
+}
+
+/** Distinct petal colors for the zen garden's flowers. */
+const FLOWER_PALETTE = [
+  "#e8638f", // pink
+  "#f4b740", // amber
+  "#d65bd1", // magenta
+  "#ff6f5e", // coral
+  "#f3f0ea", // white
+  "#9b7bff", // violet
+];
+
+export function flowerColor(i: number): string {
+  return FLOWER_PALETTE[i % FLOWER_PALETTE.length];
+}
+
+/**
+ * Ground / terrain base color per biome type. Greens for forest and zen (the
+ * floor lighter than its flora for contrast), sand for the desert.
+ */
 export function groundColor(type: BiomeType): string {
   switch (type) {
     case "desert":
-      return "#d9b380";
+      return "#e3c178"; // warm sand
     case "zen":
-      return "#cdd7c6";
+      return "#a6cf8c"; // pale green — lighter than the forest floor
     case "forest":
     default:
-      return "#3f6b3a";
+      return "#6fa856"; // light grass green — lighter than the darker trees
   }
 }
 

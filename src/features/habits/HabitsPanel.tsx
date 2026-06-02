@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useOptimistic, useState, useTransition } from "react";
 import { addHabit, archiveHabit, toggleHabitToday } from "./actions";
 
 export interface HabitView {
@@ -11,6 +11,33 @@ export interface HabitView {
   doneToday: boolean;
 }
 
+type OptimisticAction =
+  | { kind: "toggle"; id: string }
+  | { kind: "add"; title: string; weight: number }
+  | { kind: "archive"; id: string };
+
+function reduce(state: HabitView[], action: OptimisticAction): HabitView[] {
+  switch (action.kind) {
+    case "toggle":
+      return state.map((h) =>
+        h.id === action.id ? { ...h, doneToday: !h.doneToday } : h,
+      );
+    case "add":
+      return [
+        ...state,
+        {
+          id: `temp-${Date.now()}`,
+          title: action.title.trim(),
+          species: null,
+          weight: action.weight,
+          doneToday: false,
+        },
+      ];
+    case "archive":
+      return state.filter((h) => h.id !== action.id);
+  }
+}
+
 export default function HabitsPanel({
   profileId,
   habits,
@@ -18,12 +45,25 @@ export default function HabitsPanel({
   profileId: string;
   habits: HabitView[];
 }) {
-  const [isPending, startTransition] = useTransition();
+  // Optimistic state makes the list respond instantly; the server revalidation
+  // reconciles it afterwards, so it never feels stuck waiting on the network.
+  const [optimisticHabits, applyOptimistic] = useOptimistic(habits, reduce);
+  const [, startTransition] = useTransition();
   const [newTitle, setNewTitle] = useState("");
   const [newWeight, setNewWeight] = useState(3);
 
   function toggle(id: string) {
-    startTransition(() => toggleHabitToday(id));
+    startTransition(async () => {
+      applyOptimistic({ kind: "toggle", id });
+      await toggleHabitToday(id);
+    });
+  }
+
+  function remove(id: string) {
+    startTransition(async () => {
+      applyOptimistic({ kind: "archive", id });
+      await archiveHabit(id);
+    });
   }
 
   function create() {
@@ -32,27 +72,31 @@ export default function HabitsPanel({
     const weight = newWeight;
     setNewTitle("");
     setNewWeight(3);
-    startTransition(() => addHabit(profileId, title, weight));
+    startTransition(async () => {
+      applyOptimistic({ kind: "add", title, weight });
+      await addHabit(profileId, title, weight);
+    });
   }
 
-  const doneCount = habits.filter((h) => h.doneToday).length;
+  const doneCount = optimisticHabits.filter((h) => h.doneToday).length;
 
   return (
-    <aside className="pointer-events-auto flex w-80 flex-col gap-3 rounded-2xl bg-black/40 p-5 text-white backdrop-blur-md">
+    <aside className="pointer-events-auto flex max-h-[52vh] w-full flex-col gap-3 overflow-y-auto rounded-3xl bg-black/45 p-4 text-white shadow-2xl ring-1 ring-white/10 backdrop-blur-xl md:max-h-none md:w-80 md:rounded-2xl md:p-5">
+      {/* Drag handle (mobile sheet affordance) */}
+      <div className="mx-auto h-1 w-10 rounded-full bg-white/25 md:hidden" />
       <div className="flex items-baseline justify-between">
         <h2 className="text-lg font-semibold">Hábitos de hoy</h2>
         <span className="text-sm text-white/70">
-          {doneCount}/{habits.length}
+          {doneCount}/{optimisticHabits.length}
         </span>
       </div>
 
       <ul className="flex flex-col gap-2">
-        {habits.map((h) => (
+        {optimisticHabits.map((h) => (
           <li key={h.id} className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => toggle(h.id)}
-              disabled={isPending}
               aria-pressed={h.doneToday}
               aria-label={`Marcar "${h.title}" como ${h.doneToday ? "pendiente" : "completado"}`}
               className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
@@ -68,16 +112,12 @@ export default function HabitsPanel({
             >
               {h.title}
             </span>
-            <span
-              className="text-xs text-white/40"
-              title={`Peso ${h.weight}`}
-            >
+            <span className="text-xs text-white/40" title={`Peso ${h.weight}`}>
               {"●".repeat(h.weight)}
             </span>
             <button
               type="button"
-              onClick={() => startTransition(() => archiveHabit(h.id))}
-              disabled={isPending}
+              onClick={() => remove(h.id)}
               aria-label={`Archivar "${h.title}"`}
               className="text-white/30 hover:text-red-300"
             >
@@ -85,7 +125,7 @@ export default function HabitsPanel({
             </button>
           </li>
         ))}
-        {habits.length === 0 && (
+        {optimisticHabits.length === 0 && (
           <li className="text-sm text-white/50">
             Todavía no hay hábitos. Agregá el primero abajo.
           </li>
@@ -114,7 +154,7 @@ export default function HabitsPanel({
           <button
             type="button"
             onClick={create}
-            disabled={isPending || !newTitle.trim()}
+            disabled={!newTitle.trim()}
             className="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-medium text-black disabled:opacity-40"
           >
             Agregar

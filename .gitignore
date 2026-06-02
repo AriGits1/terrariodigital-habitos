@@ -49,3 +49,6 @@ next-env.d.ts
 
 # local dev logs
 *.log
+
+# personal — no se sube al repo (material de estudio individual)
+/personal/
