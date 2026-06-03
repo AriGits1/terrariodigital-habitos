@@ -1,0 +1,142 @@
+// Terrario Digital — Prisma schema
+// CC451 Interaccion Humano Computador — PC3
+//
+// Dev database: SQLite (zero-install, file-based).
+// Production target: PostgreSQL — swapping is a one-line change in the
+// datasource `provider` plus DATABASE_URL. Models stay identical.
+//
+// SQLite note: Prisma does not support native enums on SQLite, so status
+// fields are modeled as String with documented allowed values.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  // Prisma 7: the connection URL lives in prisma.config.ts, not here.
+  // For production, switch this provider to "postgresql".
+  provider = "sqlite"
+}
+
+/// The single local user profile for the MVP. Drives biome personalization.
+model Profile {
+  id            String   @id @default(cuid())
+  name          String
+  /// Preferred biome: "forest" | "desert" | "zen". Adapts to emotional profile.
+  biomeType     String   @default("forest")
+  /// Accessibility / interaction toggles.
+  voiceEnabled  Boolean  @default(true)
+  hapticsEnabled Boolean @default(true)
+  onboarded     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  habits      Habit[]
+  moodEntries MoodEntry[]
+  messages    ChatMessage[]
+  sessions    MindfulnessSession[]
+  biome       BiomeState?
+}
+
+/// A trackable habit (RF-01). Weight expresses relative importance for the
+/// biome growth/degradation engine.
+model Habit {
+  id          String   @id @default(cuid())
+  profileId   String
+  title       String
+  /// Optional plant/species this habit maps to inside the biome.
+  species     String?
+  /// Relative weight 1-5; heavier habits move the biome more.
+  weight      Int      @default(1)
+  /// "daily" | "weekly". How often the habit is expected.
+  periodicity String   @default("daily")
+  archived    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  profile Profile     @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  logs    HabitLog[]
+
+  @@index([profileId])
+}
+
+/// One completion record for a habit on a given day. Drives gamification:
+/// completions grow the biome, missed days degrade it.
+model HabitLog {
+  id        String   @id @default(cuid())
+  habitId   String
+  /// Calendar day (midnight) this log refers to.
+  date      DateTime
+  completed Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  habit Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  @@unique([habitId, date])
+  @@index([habitId])
+}
+
+/// Morning diary entry (RF-04/RF-05). Captured via voice, text, or mood card.
+/// `mood` and `score` are inferred by the LLM (Terapeuta de Bienestar).
+model MoodEntry {
+  id        String   @id @default(cuid())
+  profileId String
+  date      DateTime @default(now())
+  /// "voice" | "text" | "card" — multimodal input source (RF-14).
+  source    String   @default("text")
+  /// Raw transcript or typed text.
+  rawText   String?
+  /// LLM-inferred label, e.g. "calm", "anxious", "motivated".
+  mood      String?
+  /// Normalized valence -1.0 (negative) .. 1.0 (positive).
+  score     Float?
+  createdAt DateTime @default(now())
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+}
+
+/// Snapshot of the living ecosystem. Derived from habit logs but cached here
+/// so the 3D renderer can read a single source of truth quickly (RNF-01).
+model BiomeState {
+  id        String   @id @default(cuid())
+  profileId String   @unique
+  /// "forest" | "desert" | "zen".
+  type      String   @default("forest")
+  /// 0-100 overall growth/lushness.
+  growth    Int      @default(20)
+  /// 0-100 health; drops with missed habits, raised by completions.
+  health    Int      @default(80)
+  updatedAt DateTime @updatedAt
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+/// A message in a conversation with one of the two LLM agents.
+model ChatMessage {
+  id        String   @id @default(cuid())
+  profileId String
+  /// "coach" (Productividad) | "therapist" (Bienestar).
+  agent     String
+  /// "user" | "assistant".
+  role      String
+  content   String
+  createdAt DateTime @default(now())
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId, agent])
+}
+
+/// A completed mindfulness session with haptic guidance (RF-15).
+model MindfulnessSession {
+  id          String   @id @default(cuid())
+  profileId   String
+  durationSec Int
+  completedAt DateTime @default(now())
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+}
