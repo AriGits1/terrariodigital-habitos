@@ -2,223 +2,193 @@
 
 # 🌿 Terrario Digital de Hábitos y Bienestar
 
-**CC451 — Interacción Humano Computador · PC02 · Grupo 1**  
-Universidad Nacional de Ingeniería · Lima, Perú · 2026
+**CC451 — Interacción Humano Computador · PC03 · Grupo 1**
+Universidad Nacional de Ingeniería · Lima, Perú · 2025
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/Estado-En%20desarrollo-yellow.svg)]()
-[![HCI](https://img.shields.io/badge/Curso-CC451%20HCI-blue.svg)]()
+[![Next.js](https://img.shields.io/badge/Next.js-16-black.svg)]()
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue.svg)]()
 
 </div>
 
 ---
 
-## 📋 Descripción del Proyecto
+## 📋 Descripción
 
-**Terrario Digital** es una aplicación móvil inteligente donde los hábitos diarios del usuario construyen un ecosistema 3D vivo. Completar tareas hace crecer la flora; abandonarlas genera degradación visual progresiva. El bioma (bosque, desierto, jardín japonés) se adapta automáticamente al perfil emocional del usuario detectado por inteligencia artificial.
+**Terrario Digital** es una aplicación web donde tus hábitos diarios construyen un
+ecosistema 3D vivo. Completar tareas hace crecer la flora; abandonarlas degrada el
+bioma visualmente. El entorno (bosque, desierto, jardín zen) se adapta a tu perfil
+emocional, inferido por IA a partir de un diario de voz.
 
-### Problema que resuelve
-
-Las apps de productividad tradicionales fallan porque:
-- No generan consecuencias visibles cuando el usuario las abandona
-- Las listas de pendientes generan ansiedad cognitiva en lugar de motivación
-- Ninguna app combina tracking de hábitos con análisis emocional real
-
-### Propuesta de valor
-
-| Característica | Descripción |
-|---|---|
-| 🌿 **Bioma 3D adaptativo** | Ecosistema vivo que crece o se degrada según tus hábitos |
-| 🎙️ **Diario de voz matutino** | Input multimodal: voz, texto o mood cards |
-| 🤖 **Dos agentes LLM** | Terapeuta de Bienestar + Coach de Productividad |
-| 📳 **Interfaces hápticas** | Guía rítmica durante mindfulness, alertas de burnout |
-| ♿ **Accesibilidad WCAG AA** | Diseñado para usuarios con discapacidad visual, motriz y auditiva |
+Es una aplicación con **interfaces no convencionales** que corre en una laptop
+convencional (navegador) y es responsive para móvil.
 
 ---
 
-## 👥 Equipo — Grupo 1
+## 🎯 Capacidades obligatorias y módulos
 
-| Integrante | Rol en el proyecto |
+### Interfaces obligatorias
+
+| Interfaz | Implementación |
 |---|---|
-| **Cinver Espinoza Valera** | Casos de uso UC-03 al UC-06 · Alternativas de diseño · Diagrama de Gantt · Módulo háptico |
-| **Martin Centeno Leon** | Análisis PACT · Casos de uso UC-01 y UC-02 · Arquitectura del sistema · Diagrama de navegación |
-| **Ariana Mercado Taype** | Entrevistas con usuarios · Stakeholders · Requerimientos · Apps similares · Criterios de usabilidad · Prototipado Figma |
+| **Gráfica no convencional** | Bioma 3D interactivo con Three.js (react-three-fiber) |
+| **Voz** | Diario matutino con Web Speech API (dictado en español) |
+| **LLM** | Dos agentes (Coach + Terapeuta) sobre Google Gemini |
+
+### Módulos del proyecto
+
+| Módulo | Cómo se materializa |
+|---|---|
+| **Gamificación** | Completar hábitos hace crecer/sanar el bioma; abandonarlos lo degrada |
+| **Personalización continua** | El tipo de bioma se adapta al promedio emocional inferido del diario |
+| **Ayuda contextual** | El Coach sugiere acciones según tu estado real de hábitos |
+
+> Extra: retroalimentación **háptica** (Vibration API) en el módulo de mindfulness.
 
 ---
 
-## 🏗️ Arquitectura de la Aplicación
-
-```
-┌─────────────────────────────────────────────────────┐
-│                   CLIENTE MÓVIL                     │
-│  ┌──────────┐  ┌──────────┐  ┌───────────────────┐  │
-│  │ Bioma 3D │  │  Voz/STT │  │  UI Accesible     │  │
-│  │  (LOD)   │  │  Input   │  │  WCAG AA          │  │
-│  └──────────┘  └──────────┘  └───────────────────┘  │
-└─────────────────────────┬───────────────────────────┘
-                          │ API REST / WebSocket
-┌─────────────────────────▼───────────────────────────┐
-│                    BACKEND                          │
-│  ┌─────────────────────┐  ┌─────────────────────┐   │
-│  │ Terapeuta de        │  │ Coach de            │   │
-│  │ Bienestar (LLM)     │  │ Productividad (LLM) │   │
-│  │ · Inferencia mood   │  │ · NLP semántico     │   │
-│  │ · Detección burnout │  │ · Detección procras │   │
-│  │ · Mindfulness       │  │ · Reframes cogn.    │   │
-│  └─────────────────────┘  └─────────────────────┘   │
-│  ┌─────────────────────────────────────────────┐     │
-│  │ Motor de Bioma · Cron Job · Audit Log       │     │
-│  └─────────────────────────────────────────────┘     │
-└─────────────────────────────────────────────────────┘
-```
-
-### Stack tecnológico (planificado)
+## 🧱 Stack tecnológico
 
 | Capa | Tecnología |
 |---|---|
-| Frontend móvil | Flutter |
-| Backend | Laravel 11 + PostgreSQL |
-| Motor 3D | Three.js / Babylon.js |
-| LLM | OpenAI GPT-4o / Gemini |
-| STT | Whisper API / Google STT |
-| Haptics | Core Haptics (iOS) + Vibration API (Android) |
-| Infraestructura | Cloud (TBD) |
+| Framework | **Next.js 16** (App Router, Server Actions) |
+| Lenguaje | **TypeScript 5** |
+| Estilos | **Tailwind CSS 4** |
+| 3D | **Three.js** + `@react-three/fiber` + `@react-three/drei` |
+| Base de datos | **Prisma 7** ORM + **SQLite** (dev) |
+| LLM | **Google Gemini** (`@google/genai`, modelo `gemini-2.5-flash`) |
+| Voz | Web Speech API (nativa del navegador) |
+| Háptica | Vibration API (nativa del navegador) |
+
+> **SQLite → PostgreSQL**: el cambio a producción es de una línea (el `provider`
+> del datasource en `prisma/schema.prisma` y la URL en `prisma.config.ts`). Los
+> modelos no cambian.
 
 ---
 
-## 📱 Pantallas del Proyecto
+## 🚀 Cómo correr el proyecto
 
-El prototipo de fidelidad media incluye 9 pantallas:
+### Requisitos
 
-| # | Pantalla | Caso de Uso |
-|---|---|---|
-| 01 | Splash / Onboarding | UC-05 |
-| 02 | Diario Matutino | UC-01 |
-| 03 | Bioma Principal (Home) | UC-03 |
-| 04 | Coach de Productividad | UC-02 |
-| 05 | Vista de Hábitos | UC-05 |
-| 06 | Analíticas Semanales | UC-06 |
-| 07 | Configuración / Perfil | RF-17 |
-| 08 | Módulo de Mindfulness (modal) | UC-04 |
-| 09 | Card de Reframe (modal) | UC-02 |
+- **Node.js 20+** y **npm**
+- Un navegador basado en Chromium (Chrome/Edge) para el dictado por voz
 
-🔗 **Prototipo navegable en Figma:** [Ver prototipo](https://www.figma.com/design/bEQBU5VZhY4EPSP2lylNCM/PC2)
+### 1. Instalar dependencias
 
----
-
-## 📦 Estructura del Repositorio
-
-```
-terrario-digital/
-│
-├── 📄 README.md                          ← Este archivo
-├── 📄 LICENSE                            ← Licencia MIT
-│
-├── 📁 docs/                              ← Documentación del proyecto
-│   ├── CC451-PCL02-Proy-CORREGIDO.docx  ← Reporte PC02 completo
-│   ├── mi-aporte-Cinver-Espinoza.docx   ← Aporte personal Cinver
-│   ├── mi-aporte-Martin-Centeno.docx    ← Aporte personal Martín
-│   └── mi-aporte-Ariana-Mercado.docx    ← Aporte personal Ariana
-│
-├── 📁 design/                            ← Diseño y prototipado
-│   ├── wireframes/                       ← 9 wireframes SVG
-│   │   ├── 01_Onboarding.svg
-│   │   ├── 02_Diario_Matutino.svg
-│   │   ├── 03_Bioma_Principal.svg
-│   │   ├── 04_Coach_Productividad.svg
-│   │   ├── 05_Vista_Habitos.svg
-│   │   ├── 06_Analiticas.svg
-│   │   ├── 07_Configuracion.svg
-│   │   ├── 08_Mindfulness_Modal.svg
-│   │   └── 09_Reframe_Modal.svg
-│   ├── wireflow_terrario.html            ← Diagrama de navegación interactivo
-│   └── presentacion_pc02_v3.html        ← Presentación del proyecto
-│
-└── 📁 src/                               ← Código fuente (en desarrollo)
-    └── .gitkeep
+```bash
+npm install
 ```
 
----
+### 2. Preparar la base de datos
 
-## 📐 Requerimientos Principales
+```bash
+npx prisma migrate dev   # crea la base SQLite y aplica el esquema
+npx tsx prisma/seed.ts    # carga datos simulados de demostración
+```
 
-### Funcionales (selección)
+### 3. Configurar la clave de Gemini (opcional pero recomendado)
 
-| ID | Descripción | Prioridad |
-|---|---|---|
-| RF-01 | CRUD de hábitos con periodicidad y peso relativo | Alta |
-| RF-04 | Captura de diario de voz (máx. 60s) | Alta |
-| RF-05 | Inferencia de estado de ánimo mediante LLM | Alta |
-| RF-08 | Procesamiento de comandos semánticos ("regar la tesis") | Alta |
-| RF-14 | Input multimodal: voz + texto + mood cards (accesibilidad) | Alta |
-| RF-15 | Retroalimentación háptica sincronizada con mindfulness | Media |
+Creá un archivo **`.env.local`** en la raíz con tu clave:
 
-### No Funcionales (selección)
+```
+GEMINI_API_KEY=tu_clave_de_google_ai_studio
+```
 
-| ID | Descripción | Valor objetivo |
-|---|---|---|
-| RNF-01 | Latencia de actualización del bioma | < 1.5 segundos |
-| RNF-03 | Tiempo de respuesta del Coach (NLP) | < 2 segundos |
-| RNF-05 | Rendimiento del motor 3D | ≥ 30 FPS gama media |
-| RNF-07 | Cumplimiento de accesibilidad | WCAG 2.1 nivel AA |
+Generá una clave gratis en https://aistudio.google.com/apikey
 
----
+> Sin clave, los agentes funcionan igual con un **stub determinista** que imita
+> los tonos. Con clave, pasan a **IA real** sin ningún otro cambio (patrón
+> Strategy en `src/features/agents`).
 
-## 🗺️ Casos de Uso
+### 4. Levantar la app
 
-| UC | Nombre | Actor Principal |
-|---|---|---|
-| UC-01 | Registro Multimodal de Estado Matutino | Usuario |
-| UC-02 | Orquestación Semántica y Detección de Procrastinación | Usuario |
-| UC-03 | Renderizado, Gamificación y Degradación del Ecosistema 3D | Usuario + Sistema |
-| UC-04 | Despliegue de Intervenciones de Mindfulness y Alertas Hápticas | Terapeuta LLM |
-| UC-05 | Onboarding e Inicialización del Perfil | Usuario (nuevo) |
-| UC-06 | Visualización de Analíticas y Métricas Semanales | Usuario |
+```bash
+npm run dev
+```
+
+Abrí **http://localhost:3000**.
 
 ---
 
-## 🎯 Criterios de Usabilidad
+## 🗺️ Pantallas
 
-| Criterio | Valor objetivo | Método |
+| Ruta | Pantalla | Caso de uso |
 |---|---|---|
-| Adopción diario matutino (14 días) | ≥ 65% | Analytics |
-| Registro de hábito | ≤ 2 taps / < 10 segundos | Prueba cronometrada |
-| Retención a 30 días | ≥ 40% (industria: 25%) | Analytics |
-| SUS Score | ≥ 68 puntos | Cuestionario |
-| Violaciones WCAG | 0 críticas | Auditoría axe-core |
+| `/onboarding` | Bienvenida + elección de bioma | UC-05 |
+| `/` | Bioma 3D + panel de hábitos | UC-03 |
+| `/diario` | Diario matutino (voz/texto/cartas) | UC-01 |
+| `/coach` | Coach de Productividad | UC-02 |
+| `/analiticas` | Analíticas semanales | UC-06 |
+| `/mindfulness` | Mindfulness con guía háptica | UC-04 |
+| `/reframe` | Reencuadre cognitivo | UC-02 |
+| `/configuracion` | Perfil y preferencias | RF-17 |
 
 ---
 
-## 📅 Cronograma PC02 (Semanas 5–7)
+## 🏗️ Arquitectura
 
-| Semana | Tareas principales | Responsable |
-|---|---|---|
-| Semana 5 | Entrevistas, PACT, stakeholders, requerimientos, casos de uso | Ariana + Martín |
-| Semana 6 | Arquitectura, alternativas de diseño, Gantt, repo, documentación | Martín + Cinver |
-| Semana 7 | Prototipado Figma, diagrama de navegación, presentación | Ariana + Martín + Equipo |
+Organización **por features** (screaming architecture), con la lógica de dominio
+pura separada de la UI y del acceso a datos.
+
+```
+src/
+├── app/                    # Rutas (App Router) + Server Actions
+│   ├── page.tsx            # Home: bioma 3D
+│   ├── diario/ coach/ ...  # Una carpeta por pantalla
+├── features/               # Módulos de dominio
+│   ├── biome/              # Render 3D + lógica pura del bioma
+│   ├── habits/             # Gamificación (motor + acciones + UI)
+│   ├── voice/              # Hook de voz + diario
+│   ├── mood/               # Personalización continua
+│   ├── coach/ reframe/     # Ayuda contextual
+│   ├── analytics/          # Métricas (derivaciones puras)
+│   ├── mindfulness/        # Sesión háptica
+│   └── agents/             # Interfaz de agentes + stub + Gemini (factory)
+├── lib/
+│   └── db.ts               # Cliente Prisma (singleton + driver adapter)
+└── generated/prisma/       # Cliente Prisma autogenerado
+```
+
+**Principios aplicados:**
+
+- **Lógica pura aislada**: `biome-logic.ts`, `gamification.ts`, `analytics.ts`,
+  `personalization.ts` no dependen de React ni de la base — son testeables y
+  explicables.
+- **Patrón Strategy** en `agents/`: el resto de la app depende de la interfaz
+  `Agents`, nunca de un proveedor. `getAgents()` elige Gemini o stub según haya
+  clave. Cada método cae al stub si la API falla (resiliencia).
+- **Server Actions** para todas las mutaciones; los componentes interactivos son
+  Client Components (`"use client"`).
 
 ---
 
 ## ♿ Accesibilidad
 
-El proyecto contempla tres grupos de usuarios con discapacidad desde el diseño inicial:
+- **Entrada multimodal** (RF-14): voz, texto y mood cards como alternativas
+  equivalentes en el diario.
+- Atributos `aria-*` y `role="switch"` en controles interactivos.
+- Fallback automático a texto cuando el navegador no soporta dictado.
+- Paletas y degradados pensados para contraste.
 
-- **Discapacidad visual:** Audiodescripción dinámica del bioma (TTS), paletas WCAG AA, cambios morfológicos en lugar de solo color
-- **Discapacidad motriz:** Navegación por comandos de voz, touch targets ≥ 48×48dp, compatibilidad con Switch Access
-- **Discapacidad auditiva/habla:** Mood cards como alternativa al diario de voz, closed captions, retroalimentación háptica diferenciada
+---
+
+## 👥 Equipo — Grupo 1
+
+| Integrante | Aporte |
+|---|---|
+| **Cinver Espinoza Valera** | Ver `docs/mi-aporte-Cinver-Espinoza.docx` |
+| **Martin Centeno Leon** | Ver `docs/mi-aporte-Martin-Centeno.docx` |
+| **Ariana Mercado Taype** | Ver `docs/mi-aporte-Ariana-Mercado.docx` |
 
 ---
 
 ## 📄 Licencia
 
-Este proyecto está licenciado bajo la **Licencia MIT**. Ver el archivo [LICENSE](LICENSE) para más detalles.
-
----
+Licenciado bajo **MIT**. Ver [LICENSE](LICENSE).
 
 <div align="center">
 
-**Universidad Nacional de Ingeniería · Facultad de Ciencias**  
-CC451 Interacción Humano Computador · 2026  
-Grupo 1: Cinver Espinoza · Martin Centeno · Ariana Mercado
+**Universidad Nacional de Ingeniería · Facultad de Ciencias**
+CC451 Interacción Humano Computador · 2025
 
 </div>
