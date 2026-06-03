@@ -1,0 +1,21 @@
+WIREFRAMES — Terrario Digital de Hábitos y Bienestar
+CC451 HCI · PC02 · Grupo 1
+
+CÓMO IMPORTAR A FIGMA:
+1. Descomprime esta carpeta
+2. Abre Figma → File → Import (o arrastra los SVGs al canvas)
+3. Cada SVG se importa como un frame independiente y editable
+4. Selecciona todos los frames → desagrupalos con Ctrl+Shift+G
+5. Conéctalos con las flechas de prototipo en la pestaña "Prototype"
+6. Usa "Present" (▶) para la presentación interactiva
+
+PANTALLAS INCLUIDAS:
+01 · Onboarding (UC-05)
+02 · Diario Matutino (UC-01 · RF-04, RF-05)
+03 · Bioma Principal - Home (UC-03 · RF-02, RF-03)
+04 · Coach de Productividad (UC-02 · RF-08, RF-09, RF-10)
+05 · Vista de Hábitos (UC-05 · RF-01)
+06 · Analíticas Semanales (UC-06 · RF-12)
+07 · Configuración / Perfil (RF-17)
+08 · Módulo de Mindfulness - Modal (UC-04 · RF-06, RF-15)
+09 · Card de Reframe - Modal (UC-02 · RF-10)
