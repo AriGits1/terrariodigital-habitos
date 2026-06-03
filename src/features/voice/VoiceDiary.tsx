@@ -23,9 +23,6 @@ export default function VoiceDiary({ profileId }: { profileId: string }) {
   const [result, setResult] = useState<MoodResult | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  // The voice transcript and the textarea feed the same field.
-  const content = listening || transcript ? transcript : text;
-
   function submit(source: "voice" | "text") {
     const value = source === "voice" ? transcript : text;
     if (!value.trim()) return;

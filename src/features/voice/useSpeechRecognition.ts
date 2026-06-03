@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 
 // The Web Speech API is not in TypeScript's DOM lib, so we declare the minimal
 // shape we use. Recognition runs entirely in the browser (Chrome/Edge).
@@ -33,6 +39,12 @@ function getRecognitionCtor(): SpeechRecognitionCtor | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
+// Support is a property of the environment, not React state — read it with
+// useSyncExternalStore so it's correct on the client without setState-in-effect.
+const emptySubscribe = () => () => {};
+const isSupportedSnapshot = () => getRecognitionCtor() !== null;
+const serverSnapshot = () => false;
+
 export interface UseSpeechRecognition {
   supported: boolean;
   listening: boolean;
@@ -49,7 +61,11 @@ export interface UseSpeechRecognition {
  * caller should fall back to text/mood-card input (RF-14, accessibility).
  */
 export function useSpeechRecognition(lang = "es-ES"): UseSpeechRecognition {
-  const [supported, setSupported] = useState(false);
+  const supported = useSyncExternalStore(
+    emptySubscribe,
+    isSupportedSnapshot,
+    serverSnapshot,
+  );
   const [listening, setListening] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -57,11 +73,7 @@ export function useSpeechRecognition(lang = "es-ES"): UseSpeechRecognition {
 
   useEffect(() => {
     const Ctor = getRecognitionCtor();
-    if (!Ctor) {
-      setSupported(false);
-      return;
-    }
-    setSupported(true);
+    if (!Ctor) return;
 
     const rec = new Ctor();
     rec.lang = lang;
