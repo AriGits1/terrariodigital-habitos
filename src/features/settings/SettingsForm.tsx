@@ -21,11 +21,10 @@ export default function SettingsForm({
   const [biomeType, setBiomeType] = useState<BiomeType>(initial.biomeType);
   const [voiceEnabled, setVoiceEnabled] = useState(initial.voiceEnabled);
   const [hapticsEnabled, setHapticsEnabled] = useState(initial.hapticsEnabled);
-  const [saved, setSaved] = useState(false);
+  const [showToast, setShowToast] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   function save() {
-    setSaved(false);
     startTransition(async () => {
       await updateSettings(profileId, {
         name,
@@ -33,7 +32,8 @@ export default function SettingsForm({
         voiceEnabled,
         hapticsEnabled,
       });
-      setSaved(true);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
     });
   }
 
@@ -77,21 +77,28 @@ export default function SettingsForm({
       />
       <Toggle
         label="Retroalimentación háptica"
-        hint="Vibración guía en mindfulness"
+        hint="Vibración guía en respiración"
         checked={hapticsEnabled}
         onChange={setHapticsEnabled}
       />
 
-      <div className="flex items-center gap-3">
+      <div className="flex justify-center mt-4">
         <button
           type="button"
           onClick={save}
           disabled={isPending}
-          className="rounded-lg bg-emerald-500 px-5 py-2 font-medium text-black disabled:opacity-40"
+          className="rounded-full bg-emerald-500 px-8 py-2.5 font-medium text-black shadow-lg shadow-emerald-500/20 hover:bg-emerald-400 hover:scale-105 transition-all disabled:opacity-40 disabled:hover:scale-100"
         >
-          {isPending ? "Guardando…" : "Guardar"}
+          Guardar
         </button>
-        {saved && <span className="text-sm text-emerald-300">✓ Guardado</span>}
+      </div>
+
+      <div 
+        className={`fixed bottom-6 right-6 z-50 rounded-lg bg-emerald-500 px-4 py-3 text-sm font-medium text-black shadow-xl transition-all duration-500 ease-in-out ${
+          showToast ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
+        }`}
+      >
+        Configuración guardada
       </div>
     </div>
   );
