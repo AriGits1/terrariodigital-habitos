@@ -36,7 +36,7 @@ export default function CoachChat({
       <div className="flex-1 space-y-3 overflow-y-auto pr-1">
         {messages.length === 0 && (
           <p className="mt-8 text-center text-sm text-white/40">
-            Escribile al Coach. Te va a empujar a la acción.
+            Escríbele al Coach. Te va a empujar a la acción.
           </p>
         )}
         {messages.map((m, i) => (
@@ -69,7 +69,7 @@ export default function CoachChat({
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && send()}
-          placeholder="Escribí tu mensaje…"
+          placeholder="Escribe tu mensaje…"
           className="flex-1 rounded-lg bg-white/10 px-3 py-2 text-sm text-white outline-none placeholder:text-white/40 focus:bg-white/20"
         />
         <button
