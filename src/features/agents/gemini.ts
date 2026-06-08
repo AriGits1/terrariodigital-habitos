@@ -16,13 +16,13 @@ import { stubAgents } from "./stub";
 const MODEL = process.env.GEMINI_MODEL ?? "gemini-2.5-flash";
 
 const COACH_SYSTEM =
-  "Sos el Coach de Productividad de una app de hábitos. Tu tono es directo, " +
-  "motivador y concreto; empujás a la acción y desafiás la procrastinación con " +
-  "cariño. Respondé en español, cálido y breve (máximo 3 oraciones).";
+  "Eres el Coach de Productividad de una app de hábitos. Tu tono es directo, " +
+  "motivador y concreto; empujas a la acción y desafías la procrastinación con " +
+  "cariño. Responde en español, cálido y breve (máximo 3 oraciones).";
 
 const THERAPIST_SYSTEM =
-  "Sos el Terapeuta de Bienestar de una app de hábitos. Tu tono es cálido, " +
-  "empático y validante; nunca juzgás. Respondé en español, breve (máximo 3 oraciones).";
+  "Eres el Terapeuta de Bienestar de una app de hábitos. Tu tono es cálido, " +
+  "empático y validante; nunca juzgas. Responde en español, breve (máximo 3 oraciones).";
 
 function client(): GoogleGenAI {
   return new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -33,11 +33,11 @@ export const geminiAgents: Agents = {
     try {
       const res = await client().models.generateContent({
         model: MODEL,
-        contents: `Analizá este texto de diario y devolvé el estado de ánimo:\n"${text}"`,
+        contents: `Analiza este texto de diario y devuelve el estado de ánimo:\n"${text}"`,
         config: {
           systemInstruction:
             THERAPIST_SYSTEM +
-            " Inferí el mood como uno de: motivated, calm, neutral, anxious, sad. " +
+            " Infiere el mood como uno de: motivated, calm, neutral, anxious, sad. " +
             "El score es la valencia emocional de -1 (muy negativo) a 1 (muy positivo). " +
             "El reply es tu respuesta empática al usuario.",
           temperature: 0.4,
@@ -117,7 +117,7 @@ export const geminiAgents: Agents = {
     try {
       const res = await client().models.generateContent({
         model: MODEL,
-        contents: `Reencuadrá este pensamiento negativo con compasión y una perspectiva más realista:\n"${thought}"`,
+        contents: `Reencuadra este pensamiento negativo con compasión y una perspectiva más realista:\n"${thought}"`,
         config: { systemInstruction: THERAPIST_SYSTEM, temperature: 0.6 },
       });
       return res.text ?? "";
