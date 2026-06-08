@@ -58,6 +58,12 @@ export async function addHabit(
   const clean = title.trim();
   if (!clean) return;
 
+  // Enforce a maximum of 5 active habits per profile
+  const count = await prisma.habit.count({
+    where: { profileId, archived: false },
+  });
+  if (count >= 5) return;
+
   await prisma.habit.create({
     data: {
       profileId,

@@ -1,7 +1,9 @@
 "use client";
 
 import { useOptimistic, useState, useTransition } from "react";
+import Link from "next/link";
 import { addHabit, archiveHabit, toggleHabitToday } from "./actions";
+import { Check, X, MessageCircle, Plus } from "lucide-react";
 
 export interface HabitView {
   id: string;
@@ -9,6 +11,8 @@ export interface HabitView {
   species: string | null;
   weight: number;
   doneToday: boolean;
+  weeklyLogs?: string[];
+  createdAt?: string;
 }
 
 type OptimisticAction =
@@ -79,6 +83,7 @@ export default function HabitsPanel({
   }
 
   const doneCount = optimisticHabits.filter((h) => h.doneToday).length;
+  const atLimit = optimisticHabits.length >= 5;
 
   return (
     <aside className="pointer-events-auto flex max-h-[52vh] w-full flex-col gap-3 overflow-y-auto rounded-3xl bg-black/45 p-4 text-white shadow-2xl ring-1 ring-white/10 backdrop-blur-xl md:max-h-none md:w-80 md:rounded-2xl md:p-5">
@@ -105,7 +110,7 @@ export default function HabitsPanel({
                   : "border-white/40 bg-transparent"
               }`}
             >
-              {h.doneToday ? "✓" : ""}
+              {h.doneToday ? <Check className="h-4 w-4 stroke-[3]" /> : null}
             </button>
             <span
               className={`flex-1 text-sm ${h.doneToday ? "text-white/60 line-through" : ""}`}
@@ -121,13 +126,13 @@ export default function HabitsPanel({
               aria-label={`Archivar "${h.title}"`}
               className="text-white/30 hover:text-red-300"
             >
-              ✕
+              <X className="h-4 w-4" />
             </button>
           </li>
         ))}
         {optimisticHabits.length === 0 && (
           <li className="text-sm text-white/50">
-            Todavía no hay hábitos. Agregá el primero abajo.
+            Todavía no hay hábitos. Agrega el primero abajo.
           </li>
         )}
       </ul>
@@ -136,9 +141,14 @@ export default function HabitsPanel({
         <input
           value={newTitle}
           onChange={(e) => setNewTitle(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && create()}
-          placeholder="Nuevo hábito…"
-          className="rounded-lg bg-white/10 px-3 py-2 text-sm outline-none placeholder:text-white/40 focus:bg-white/20"
+          onKeyDown={(e) => e.key === "Enter" && !atLimit && create()}
+          placeholder={atLimit ? "Límite de 5 hábitos alcanzado" : "Nuevo hábito…"}
+          disabled={atLimit}
+          className={`rounded-lg bg-white/10 px-3 py-2 text-sm outline-none transition-all focus:bg-white/20 ${
+            atLimit
+              ? "cursor-not-allowed opacity-50 placeholder:text-red-300/70"
+              : "placeholder:text-white/40"
+          }`}
         />
         <div className="flex items-center gap-2">
           <label className="text-xs text-white/60">Peso</label>
@@ -148,18 +158,30 @@ export default function HabitsPanel({
             max={5}
             value={newWeight}
             onChange={(e) => setNewWeight(Number(e.target.value))}
-            className="flex-1"
+            disabled={atLimit}
+            className={`flex-1 ${atLimit ? "cursor-not-allowed opacity-50" : ""}`}
           />
           <span className="w-4 text-sm">{newWeight}</span>
           <button
             type="button"
             onClick={create}
-            disabled={!newTitle.trim()}
-            className="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-medium text-black disabled:opacity-40"
+            disabled={atLimit || !newTitle.trim()}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-black transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+            aria-label="Agregar hábito"
           >
-            Agregar
+            <Plus className="h-5 w-5" />
           </button>
         </div>
+      </div>
+
+      <div className="mt-4 flex justify-end">
+        <Link
+          href="?coach=true"
+          scroll={false}
+          className="flex items-center justify-center rounded-full bg-blue-600/80 px-4 py-2 text-sm font-medium text-white shadow-lg backdrop-blur-md transition-colors hover:bg-blue-500"
+        >
+          Hablar con Coach
+        </Link>
       </div>
     </aside>
   );

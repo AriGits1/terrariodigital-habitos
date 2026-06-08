@@ -1,28 +1,36 @@
 import { prisma } from "@/lib/db";
 import { dayAt } from "./gamification";
 
-/** All active habits for a profile, each flagged with today's completion. */
+/** All active habits for a profile, including today's status and the last 7 days of logs. */
 export async function getHabitsWithTodayStatus(profileId: string) {
   const today = dayAt(0);
+  const sevenDaysAgo = dayAt(6);
+
   const habits = await prisma.habit.findMany({
     where: { profileId, archived: false },
     orderBy: { createdAt: "asc" },
     include: {
       logs: {
-        where: { date: today, completed: true },
-        take: 1,
+        where: { date: { gte: sevenDaysAgo }, completed: true },
+        orderBy: { date: "desc" },
       },
     },
   });
 
-  return habits.map((h) => ({
-    id: h.id,
-    title: h.title,
-    species: h.species,
-    weight: h.weight,
-    periodicity: h.periodicity,
-    doneToday: h.logs.length > 0,
-  }));
+  return habits.map((h) => {
+    // Check if there is a log with date === today
+    const doneToday = h.logs.some((l) => l.date.getTime() === today.getTime());
+    return {
+      id: h.id,
+      title: h.title,
+      species: h.species,
+      weight: h.weight,
+      periodicity: h.periodicity,
+      createdAt: h.createdAt.toISOString(),
+      doneToday,
+      weeklyLogs: h.logs.map((l) => l.date.toISOString()),
+    };
+  });
 }
 
 /**
