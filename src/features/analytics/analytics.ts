@@ -13,6 +13,8 @@ export interface DayPoint {
   date: Date;
   /** Weighted completion ratio 0..1 for that day. */
   score: number;
+  /** Number of habits completed that day */
+  completedCount: number;
   /** Short weekday label, e.g. "lun". */
   label: string;
 }
@@ -26,9 +28,22 @@ export function weeklyScores(
   const points: DayPoint[] = [];
   for (let i = 6; i >= 0; i--) {
     const d = dayAt(i, today);
+    const dayKey = d.getTime();
+    let completedCount = 0;
+    for (const h of habits) {
+      const done = logs.some(
+        (l) =>
+          l.habitId === h.id &&
+          l.completed &&
+          new Date(l.date).setHours(0, 0, 0, 0) === dayKey,
+      );
+      if (done) completedCount++;
+    }
+
     points.push({
       date: d,
       score: dayScore(habits, logs, d),
+      completedCount,
       label: d.toLocaleDateString("es-PE", { weekday: "short" }),
     });
   }
