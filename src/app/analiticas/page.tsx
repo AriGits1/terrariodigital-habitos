@@ -8,12 +8,14 @@ import {
   weeklyScores,
 } from "@/features/analytics/analytics";
 
-const MOOD_EMOJI: Record<string, string> = {
-  motivated: "😄",
-  calm: "🙂",
-  neutral: "😐",
-  anxious: "😟",
-  sad: "😢",
+import { Smile, Heart, Meh, AlertCircle, Frown } from "lucide-react";
+
+const MOOD_ICONS: Record<string, React.ElementType> = {
+  motivated: Smile,
+  calm: Heart,
+  neutral: Meh,
+  anxious: AlertCircle,
+  sad: Frown,
 };
 
 export default async function AnaliticasPage() {
@@ -62,11 +64,14 @@ export default async function AnaliticasPage() {
           <div className="flex h-40 items-end justify-between gap-2">
             {week.map((d, i) => (
               <div key={i} className="flex flex-1 flex-col items-center gap-2">
+                <span className="text-xs font-semibold text-emerald-400">
+                  {d.completedCount > 0 ? d.completedCount : ""}
+                </span>
                 <div className="flex h-32 w-full items-end">
                   <div
                     className="w-full rounded-t bg-emerald-400 transition-all"
                     style={{ height: `${Math.max(4, d.score * 100)}%` }}
-                    title={`${Math.round(d.score * 100)}%`}
+                    title={`${d.completedCount} completado(s)`}
                   />
                 </div>
                 <span className="text-xs capitalize text-white/50">
@@ -114,13 +119,15 @@ export default async function AnaliticasPage() {
             <div className="flex items-end justify-between gap-2">
               {moods.map((m, i) => (
                 <div key={i} className="flex flex-col items-center gap-1">
-                  <span className="text-2xl">
-                    {MOOD_EMOJI[m.mood ?? "neutral"] ?? "😐"}
+                  <span className="text-emerald-400">
+                    {(() => {
+                      const Icon = MOOD_ICONS[m.mood ?? "neutral"] ?? Meh;
+                      return <Icon className="h-6 w-6" />;
+                    })()}
                   </span>
-                  <span className="text-xs text-white/40">
+                  <span className="text-xs capitalize text-white/40">
                     {new Date(m.date).toLocaleDateString("es-PE", {
-                      day: "numeric",
-                      month: "numeric",
+                      weekday: "short",
                     })}
                   </span>
                 </div>
@@ -128,7 +135,7 @@ export default async function AnaliticasPage() {
             </div>
           ) : (
             <p className="text-sm text-white/40">
-              Registrá tu ánimo en el diario para ver la tendencia.
+              Registra tu ánimo en el diario para ver la tendencia.
             </p>
           )}
         </section>

@@ -22,9 +22,9 @@ export default async function MindfulnessPage() {
 
       <div className="flex flex-1 flex-col items-center justify-center gap-8">
         <div className="text-center">
-          <h1 className="text-2xl font-semibold">Mindfulness</h1>
-          <p className="text-sm text-white/60">
-            Seguí el ritmo. Respirá con el círculo.
+          <h1 className="text-2xl font-semibold">Respiración</h1>
+          <p className="mt-1 text-sm text-white/60">
+            Sigue el ritmo de la animación para enfocar tu mente.
           </p>
         </div>
         <MindfulnessGuide
