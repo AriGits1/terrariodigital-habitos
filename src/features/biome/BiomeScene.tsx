@@ -1,26 +1,26 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useEffect } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import type { Group } from "three";
+import { useRouter } from "next/navigation";
 import {
   type BiomeType,
   flowerColor,
   foliageColor,
   groundColor,
-  plantCount,
   plantKind,
-  plantLayout,
+  generateBiomeVegetation,
   skyColor,
   vitality,
   type PlantPlacement,
 } from "./biome-logic";
+import type { HabitView } from "@/features/habits/HabitsPanel";
 
 interface BiomeSceneProps {
   type: BiomeType;
-  growth: number;
-  health: number;
+  habits: HabitView[];
 }
 
 /** Wraps a plant so it sways gently and sits at its placement. */
@@ -28,17 +28,19 @@ function SwayGroup({
   placement,
   swayOffset,
   vitalityLevel,
+  onClick,
   children,
 }: {
   placement: PlantPlacement;
   swayOffset: number;
   vitalityLevel: number;
+  onClick: () => void;
   children: React.ReactNode;
 }) {
   const ref = useRef<Group>(null);
-  useFrame((state) => {
+  useFrame(() => {
     if (!ref.current) return;
-    const t = state.clock.elapsedTime;
+    const t = performance.now() / 1000;
     const amplitude = 0.02 + vitalityLevel * 0.03;
     ref.current.rotation.z =
       placement.lean + Math.sin(t * 1.2 + swayOffset) * amplitude;
@@ -48,6 +50,12 @@ function SwayGroup({
       ref={ref}
       position={[placement.x, 0, placement.z]}
       scale={placement.scale}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      onPointerOver={() => (document.body.style.cursor = "pointer")}
+      onPointerOut={() => (document.body.style.cursor = "auto")}
     >
       {children}
     </group>
@@ -143,6 +151,58 @@ function Flower({
   );
 }
 
+function Grass({ color }: { color: string }) {
+  return (
+    <>
+      <mesh position={[-0.05, 0.15, 0.05]} rotation={[0, 0, -0.2]}>
+        <coneGeometry args={[0.03, 0.3, 3]} />
+        <meshStandardMaterial color={color} flatShading />
+      </mesh>
+      <mesh position={[0.05, 0.2, -0.05]} rotation={[0, 0, 0.2]}>
+        <coneGeometry args={[0.035, 0.4, 3]} />
+        <meshStandardMaterial color={color} flatShading />
+      </mesh>
+      <mesh position={[0, 0.1, 0.08]} rotation={[0.2, 0, 0]}>
+        <coneGeometry args={[0.025, 0.2, 3]} />
+        <meshStandardMaterial color={color} flatShading />
+      </mesh>
+    </>
+  );
+}
+
+function Bush({ color }: { color: string }) {
+  return (
+    <mesh position={[0, 0.3, 0]}>
+      <icosahedronGeometry args={[0.4, 1]} />
+      <meshStandardMaterial color={color} flatShading />
+    </mesh>
+  );
+}
+
+function SmallFlower({ stemColor, petalColor }: { stemColor: string; petalColor: string }) {
+  return (
+    <>
+      <mesh position={[0, 0.15, 0]}>
+        <cylinderGeometry args={[0.015, 0.015, 0.3, 4]} />
+        <meshStandardMaterial color={stemColor} />
+      </mesh>
+      <mesh position={[0, 0.3, 0]}>
+        <icosahedronGeometry args={[0.12, 0]} />
+        <meshStandardMaterial color={petalColor} flatShading />
+      </mesh>
+    </>
+  );
+}
+
+function Rock() {
+  return (
+    <mesh position={[0, 0.15, 0]} rotation={[Math.PI/4, Math.PI/3, 0]}>
+      <dodecahedronGeometry args={[0.2, 0]} />
+      <meshStandardMaterial color="#888888" flatShading />
+    </mesh>
+  );
+}
+
 /** The circular terrain the flora grows on. */
 function Ground({ color }: { color: string }) {
   // A cylinder's axis is already vertical, so its flat caps face up/down — no
@@ -161,16 +221,80 @@ function Ground({ color }: { color: string }) {
   );
 }
 
-export default function BiomeScene({ type, growth, health }: BiomeSceneProps) {
-  const v = vitality(health);
-  const foliage = foliageColor(type, health);
+export default function BiomeScene({ type, habits }: BiomeSceneProps) {
+  useEffect(() => {
+    // Suppress the THREE.Clock deprecation warning caused by React Three Fiber internals
+    const originalWarn = console.warn;
+    console.warn = (...args) => {
+      if (typeof args[0] === "string" && args[0].includes("THREE.Clock: This module has been deprecated")) {
+        return;
+      }
+      originalWarn.apply(console, args);
+    };
+    return () => {
+      console.warn = originalWarn;
+    };
+  }, []);
+
+  const router = useRouter();
+
+  const total = habits.length;
+  const done = habits.filter(h => h.doneToday).length;
+  const overallHealth = total === 0 ? 80 : (done / total) * 100;
+
   const ground = groundColor(type);
   const sky = skyColor(type);
-  const kind = plantKind(type);
+  const mainKind = plantKind(type);
+
+  // Compute daily habits data based on weeklyLogs
+  const daysData = useMemo(() => {
+    const data: { dayIndex: number; habits: { id: string; weight: number; status: "completed" | "pending" | "failed" }[] }[] = [];
+    
+    // Pick top 5 habits (limit per day as requested)
+    const topHabits = habits.slice(0, 5);
+    
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    for (let day = 0; day < 7; day++) {
+      const dayHabits = topHabits
+        .filter(h => {
+          if (!h.createdAt) return true;
+          const createdDate = new Date(h.createdAt);
+          const createdMidnight = new Date(createdDate.getFullYear(), createdDate.getMonth(), createdDate.getDate());
+          const createdDiffDays = Math.floor((today.getTime() - createdMidnight.getTime()) / (1000 * 60 * 60 * 24));
+          // If the day index (e.g. 2 days ago) is greater than how long ago the habit was created, it didn't exist then.
+          return day <= createdDiffDays;
+        })
+        .map(h => {
+          let completed = false;
+          if (h.weeklyLogs) {
+            for (const log of h.weeklyLogs) {
+              const logDate = new Date(log);
+              const logMidnight = new Date(logDate.getFullYear(), logDate.getMonth(), logDate.getDate());
+              const diffTime = today.getTime() - logMidnight.getTime();
+              const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+              if (diffDays === day) {
+                completed = true;
+                break;
+              }
+            }
+          }
+          let status: "completed" | "pending" | "failed" = completed ? "completed" : "failed";
+          // If it's today (day 0) and not completed, it's pending, not failed yet
+          if (!completed && day === 0) status = "pending";
+
+          return { id: h.id, weight: h.weight, status };
+        });
+      data.push({ dayIndex: day, habits: dayHabits });
+    }
+    
+    return data;
+  }, [habits]);
 
   const placements = useMemo(
-    () => plantLayout(plantCount(growth), health),
-    [growth, health],
+    () => generateBiomeVegetation(daysData),
+    [daysData],
   );
 
   return (
@@ -187,29 +311,48 @@ export default function BiomeScene({ type, growth, health }: BiomeSceneProps) {
       <directionalLight position={[6, 12, 6]} intensity={1.1} />
 
       <Ground color={ground} />
-      {placements.map((p, i) => (
-        <SwayGroup
-          key={i}
-          placement={p}
-          vitalityLevel={v}
-          swayOffset={i * 0.7}
-        >
-          {kind === "cactus" ? (
-            <Cactus color={foliage} vitalityLevel={v} />
-          ) : kind === "flower" ? (
-            <Flower
-              stemColor={foliage}
-              petalColor={flowerColor(i)}
-              vitalityLevel={v}
-            />
-          ) : (
-            <ForestTree color={foliage} vitalityLevel={v} />
-          )}
-        </SwayGroup>
-      ))}
+      {placements.map((p, i) => {
+        // Decorative elements use random colors/vitality derived from index
+        const isMain = p.kind === "main";
+        // Main plants are fully healthy because they represent completions
+        const v = isMain ? 1.0 : vitality(80 + (i % 20)); 
+        const foliage = foliageColor(type, isMain ? 100 : 80);
 
-      {/* Fixed, always-flattering framing: gentle auto-rotation, no zoom so the
-          user can never end up inside a plant, and a clamped vertical angle. */}
+        return (
+          <SwayGroup
+            key={p.id}
+            placement={p}
+            vitalityLevel={v}
+            swayOffset={i * 0.7}
+            onClick={() => {
+              if (isMain) router.push('?coach=true', { scroll: false });
+            }}
+          >
+            {p.kind === "main" ? (
+              mainKind === "cactus" ? (
+                <Cactus color={foliage} vitalityLevel={v} />
+              ) : mainKind === "flower" ? (
+                <Flower
+                  stemColor={foliage}
+                  petalColor={flowerColor(p.dayIndex)}
+                  vitalityLevel={v}
+                />
+              ) : (
+                <ForestTree color={foliage} vitalityLevel={v} />
+              )
+            ) : p.kind === "grass" ? (
+              <Grass color={foliage} />
+            ) : p.kind === "bush" ? (
+              <Bush color={foliage} />
+            ) : p.kind === "smallFlower" ? (
+              <SmallFlower stemColor={foliage} petalColor={flowerColor(i)} />
+            ) : (
+              <Rock />
+            )}
+          </SwayGroup>
+        );
+      })}
+
       <OrbitControls
         makeDefault
         target={[0, 1.2, 0]}

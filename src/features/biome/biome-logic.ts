@@ -26,13 +26,15 @@ export function vitality(health: number): number {
 }
 
 /** What kind of flora grows in each biome. */
-export type PlantKind = "tree" | "cactus" | "flower";
+export type MainPlantKind = "tree" | "cactus" | "flower";
 
-export function plantKind(type: BiomeType): PlantKind {
+export function plantKind(type: BiomeType): MainPlantKind {
   if (type === "desert") return "cactus";
   if (type === "zen") return "flower";
   return "tree";
 }
+
+export type VegetationKind = "main" | "grass" | "bush" | "smallFlower" | "rock";
 
 /** Distinct petal colors for the zen garden's flowers. */
 const FLOWER_PALETTE = [
@@ -99,23 +101,27 @@ export function foliageColor(type: BiomeType, health: number): string {
 }
 
 export interface PlantPlacement {
+  id: string;
+  kind: VegetationKind;
   x: number;
   z: number;
   scale: number;
-  /** Lean angle (radians) — withered plants droop more. */
   lean: number;
+  habitId?: string;
+  dayIndex: number;
+  health: number;
 }
 
 /**
- * Deterministic plant layout. Uses a small seeded PRNG so positions stay stable
- * across re-renders and reloads (no jitter), while still looking organic.
+ * Deterministic plant layout based on daily habits.
+ * Divides the circular ground into 7 slices (0 = today, 1 = yesterday, etc.)
  */
-export function plantLayout(count: number, health: number): PlantPlacement[] {
-  const v = vitality(health);
+export function generateBiomeVegetation(
+  daysData: { dayIndex: number; habits: { id: string; weight: number; status: "completed" | "pending" | "failed" }[] }[]
+): PlantPlacement[] {
   const placements: PlantPlacement[] = [];
   let seed = 1337;
   const rand = () => {
-    // Mulberry32 PRNG — deterministic given the seed.
     seed |= 0;
     seed = (seed + 0x6d2b79f5) | 0;
     let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
@@ -123,18 +129,85 @@ export function plantLayout(count: number, health: number): PlantPlacement[] {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 
-  const radius = 6;
-  for (let i = 0; i < count; i++) {
-    // Spread plants on a disc using rejection-free polar sampling.
-    const angle = rand() * Math.PI * 2;
-    const dist = Math.sqrt(rand()) * radius;
-    placements.push({
-      x: Math.cos(angle) * dist,
-      z: Math.sin(angle) * dist,
-      scale: 0.6 + rand() * 0.8,
-      // Healthy plants stand upright; withered ones lean up to ~0.4 rad.
-      lean: (1 - v) * (rand() * 0.4),
-    });
+  const radius = 8;
+  const sliceAngle = (Math.PI * 2) / 7;
+
+  for (const day of daysData) {
+    const baseAngle = Math.PI / 2 - day.dayIndex * sliceAngle;
+
+    for (const h of day.habits) {
+      const angleOffset = (rand() - 0.5) * (sliceAngle * 0.7);
+      const angle = baseAngle + angleOffset;
+      const dist = 1.5 + Math.sqrt(rand()) * (radius - 2.5);
+
+      if (h.status === "completed") {
+        // Healthy: size scales with habit weight
+        const finalScale = (0.6 + rand() * 0.4) + (h.weight * 0.15);
+        placements.push({
+          id: `main-${h.id}-${day.dayIndex}`,
+          kind: "main",
+          x: Math.cos(angle) * dist,
+          z: Math.sin(angle) * dist,
+          scale: finalScale,
+          lean: (rand() - 0.5) * 0.15,
+          habitId: h.id,
+          dayIndex: day.dayIndex,
+          health: 100,
+        });
+
+        // Spawn secondary flora based on habit weight
+        const extraFlora = h.weight * 2;
+        for (let i = 0; i < extraFlora; i++) {
+          const exAngleOffset = (rand() - 0.5) * (sliceAngle * 0.85);
+          const exAngle = baseAngle + exAngleOffset;
+          const exDist = 1.0 + Math.sqrt(rand()) * (radius - 1.5);
+          
+          const r = rand();
+          let kind: VegetationKind = "grass";
+          if (r > 0.8) kind = "bush";
+          else if (r > 0.6) kind = "smallFlower";
+          else if (r > 0.5) kind = "rock";
+
+          placements.push({
+            id: `deco-${day.dayIndex}-${h.id}-${i}`,
+            kind,
+            x: Math.cos(exAngle) * exDist,
+            z: Math.sin(exAngle) * exDist,
+            scale: 0.4 + rand() * 0.6,
+            lean: (rand() - 0.5) * 0.3,
+            dayIndex: day.dayIndex,
+            health: 100,
+          });
+        }
+      } else if (h.status === "pending") {
+        // Pending: Normal color, normal size, upright, no extra flora
+        placements.push({
+          id: `main-${h.id}-${day.dayIndex}`,
+          kind: "main",
+          x: Math.cos(angle) * dist,
+          z: Math.sin(angle) * dist,
+          scale: 0.6 + rand() * 0.4,
+          lean: (rand() - 0.5) * 0.15, // Upright
+          habitId: h.id,
+          dayIndex: day.dayIndex,
+          health: 80, // Normal healthy green, but not glowing
+        });
+      } else {
+        // Failed: Withered, smaller, and fallen over
+        placements.push({
+          id: `main-${h.id}-${day.dayIndex}`,
+          kind: "main",
+          x: Math.cos(angle) * dist,
+          z: Math.sin(angle) * dist,
+          scale: 0.5 + rand() * 0.3,
+          lean: (Math.PI / 2.5) * (rand() > 0.5 ? 1 : -1),
+          habitId: h.id,
+          dayIndex: day.dayIndex,
+          health: 15,
+        });
+      }
+    }
   }
+
   return placements;
 }
