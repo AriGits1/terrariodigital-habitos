@@ -22,7 +22,7 @@ export default function OnboardingForm() {
           <div>
             <h1 className="text-2xl font-semibold">🌿 Bienvenido</h1>
             <p className="mt-1 text-sm text-white/60">
-              Tu terrario crece con tus hábitos. ¿Cómo te llamás?
+              Tu terrario crece con tus hábitos. ¿Cómo te llamas?
             </p>
           </div>
           <input
@@ -45,9 +45,9 @@ export default function OnboardingForm() {
       ) : (
         <div className="flex flex-col gap-5">
           <div>
-            <h1 className="text-2xl font-semibold">Elegí tu bioma</h1>
+            <h1 className="text-2xl font-semibold">Elige tu bioma</h1>
             <p className="mt-1 text-sm text-white/60">
-              Podés cambiarlo después; además se adapta a tu ánimo.
+              Puedes cambiarlo después; además se adapta a tu ánimo.
             </p>
           </div>
           <div className="flex flex-col gap-3">
