@@ -108,16 +108,61 @@ export interface PlantPlacement {
   scale: number;
   lean: number;
   habitId?: string;
+  habitTitle?: string;
   dayIndex: number;
   health: number;
 }
 
+/** Check if a candidate position is too close to any existing placement. */
+function isTooClose(
+  x: number,
+  z: number,
+  placements: PlantPlacement[],
+  minDist: number,
+): boolean {
+  for (const p of placements) {
+    const dx = p.x - x;
+    const dz = p.z - z;
+    if (dx * dx + dz * dz < minDist * minDist) return true;
+  }
+  return false;
+}
+
 /**
- * Deterministic plant layout based on daily habits.
- * Divides the circular ground into 7 slices (0 = today, 1 = yesterday, etc.)
+ * Generates a position within the circular terrain at a random angle and
+ * distance, retrying up to `maxAttempts` times to satisfy the minimum spacing.
+ * Returns null if no valid spot is found.
+ */
+function findPosition(
+  rand: () => number,
+  radius: number,
+  minDist: number,
+  innerRadius: number,
+  placements: PlantPlacement[],
+  maxAttempts = 10,
+): { x: number; z: number } | null {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const angle = rand() * Math.PI * 2;
+    const dist = innerRadius + Math.sqrt(rand()) * (radius - innerRadius);
+    const x = Math.cos(angle) * dist;
+    const z = Math.sin(angle) * dist;
+    if (!isTooClose(x, z, placements, minDist)) {
+      return { x, z };
+    }
+  }
+  return null;
+}
+
+/**
+ * Free-placement plant layout based on the full week of habit history.
+ * Plants are scattered randomly across the entire circular terrain with
+ * minimum spacing constraints:
+ *   - Main trees/plants: 2.8 units minimum between each other
+ *   - Secondary flora (grass, bush, flowers): 0.9 units minimum
+ * The terrain radius is 11 units (larger than before) to accommodate more vegetation.
  */
 export function generateBiomeVegetation(
-  daysData: { dayIndex: number; habits: { id: string; weight: number; status: "completed" | "pending" | "failed" }[] }[]
+  daysData: { dayIndex: number; habits: { id: string; title: string; weight: number; status: "completed" | "pending" | "failed" }[] }[]
 ): PlantPlacement[] {
   const placements: PlantPlacement[] = [];
   let seed = 1337;
@@ -129,82 +174,88 @@ export function generateBiomeVegetation(
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 
-  const radius = 8;
-  const sliceAngle = (Math.PI * 2) / 7;
+  const TERRAIN_RADIUS = 11;   // larger terrain so vegetation fits comfortably
+  const INNER_RADIUS = 1.2;    // keep a small clear zone at center
+  const MAIN_MIN_DIST = 2.8;   // min distance between main trees/plants
+  const DECO_MIN_DIST = 0.9;   // min distance between secondary flora
 
   for (const day of daysData) {
-    const baseAngle = Math.PI / 2 - day.dayIndex * sliceAngle;
-
     for (const h of day.habits) {
-      const angleOffset = (rand() - 0.5) * (sliceAngle * 0.7);
-      const angle = baseAngle + angleOffset;
-      const dist = 1.5 + Math.sqrt(rand()) * (radius - 2.5);
-
       if (h.status === "completed") {
-        // Healthy: size scales with habit weight
-        const finalScale = (0.6 + rand() * 0.4) + (h.weight * 0.15);
-        placements.push({
-          id: `main-${h.id}-${day.dayIndex}`,
-          kind: "main",
-          x: Math.cos(angle) * dist,
-          z: Math.sin(angle) * dist,
-          scale: finalScale,
-          lean: (rand() - 0.5) * 0.15,
-          habitId: h.id,
-          dayIndex: day.dayIndex,
-          health: 100,
-        });
-
-        // Spawn secondary flora based on habit weight
-        const extraFlora = h.weight * 2;
-        for (let i = 0; i < extraFlora; i++) {
-          const exAngleOffset = (rand() - 0.5) * (sliceAngle * 0.85);
-          const exAngle = baseAngle + exAngleOffset;
-          const exDist = 1.0 + Math.sqrt(rand()) * (radius - 1.5);
-          
-          const r = rand();
-          let kind: VegetationKind = "grass";
-          if (r > 0.8) kind = "bush";
-          else if (r > 0.6) kind = "smallFlower";
-          else if (r > 0.5) kind = "rock";
-
+        // Find a spot for the main plant
+        const pos = findPosition(rand, TERRAIN_RADIUS, MAIN_MIN_DIST, INNER_RADIUS, placements);
+        if (pos) {
+          const finalScale = (0.6 + rand() * 0.4) + (h.weight * 0.15);
           placements.push({
-            id: `deco-${day.dayIndex}-${h.id}-${i}`,
-            kind,
-            x: Math.cos(exAngle) * exDist,
-            z: Math.sin(exAngle) * exDist,
-            scale: 0.4 + rand() * 0.6,
-            lean: (rand() - 0.5) * 0.3,
+            id: `main-${h.id}-${day.dayIndex}`,
+            kind: "main",
+            x: pos.x,
+            z: pos.z,
+            scale: finalScale,
+            lean: (rand() - 0.5) * 0.15,
+            habitId: h.id,
+            habitTitle: h.title,
             dayIndex: day.dayIndex,
             health: 100,
           });
+
+          // Spawn secondary flora scattered around its own spot
+          const extraFlora = h.weight * 2;
+          for (let i = 0; i < extraFlora; i++) {
+            const decoPos = findPosition(rand, TERRAIN_RADIUS, DECO_MIN_DIST, INNER_RADIUS, placements);
+            if (!decoPos) continue;
+
+            const r = rand();
+            let kind: VegetationKind = "grass";
+            if (r > 0.8) kind = "bush";
+            else if (r > 0.6) kind = "smallFlower";
+            else if (r > 0.5) kind = "rock";
+
+            placements.push({
+              id: `deco-${day.dayIndex}-${h.id}-${i}`,
+              kind,
+              x: decoPos.x,
+              z: decoPos.z,
+              scale: 0.4 + rand() * 0.6,
+              lean: (rand() - 0.5) * 0.3,
+              dayIndex: day.dayIndex,
+              health: 100,
+            });
+          }
         }
       } else if (h.status === "pending") {
-        // Pending: Normal color, normal size, upright, no extra flora
-        placements.push({
-          id: `main-${h.id}-${day.dayIndex}`,
-          kind: "main",
-          x: Math.cos(angle) * dist,
-          z: Math.sin(angle) * dist,
-          scale: 0.6 + rand() * 0.4,
-          lean: (rand() - 0.5) * 0.15, // Upright
-          habitId: h.id,
-          dayIndex: day.dayIndex,
-          health: 80, // Normal healthy green, but not glowing
-        });
+        const pos = findPosition(rand, TERRAIN_RADIUS, MAIN_MIN_DIST, INNER_RADIUS, placements);
+        if (pos) {
+          placements.push({
+            id: `main-${h.id}-${day.dayIndex}`,
+            kind: "main",
+            x: pos.x,
+            z: pos.z,
+            scale: 0.6 + rand() * 0.4,
+            lean: (rand() - 0.5) * 0.15,
+            habitId: h.id,
+            habitTitle: h.title,
+            dayIndex: day.dayIndex,
+            health: 80,
+          });
+        }
       } else {
-        // Failed: Withered, smaller, and fallen over
-        placements.push({
-          id: `main-${h.id}-${day.dayIndex}`,
-          kind: "main",
-          x: Math.cos(angle) * dist,
-          z: Math.sin(angle) * dist,
-          scale: 0.5 + rand() * 0.3,
-          lean: (Math.PI / 2.5) * (rand() > 0.5 ? 1 : -1),
-          habitId: h.id,
-          dayIndex: day.dayIndex,
-          health: 15,
-        });
+        // Failed — withered, fallen
+        const pos = findPosition(rand, TERRAIN_RADIUS, MAIN_MIN_DIST, INNER_RADIUS, placements);
+        if (pos) {
+          placements.push({
+            id: `main-${h.id}-${day.dayIndex}`,
+            kind: "main",
+            x: pos.x,
+            z: pos.z,
+            scale: 0.5 + rand() * 0.3,
+            lean: (Math.PI / 2.5) * (rand() > 0.5 ? 1 : -1),
+            habitId: h.id,
+            habitTitle: h.title,
+            dayIndex: day.dayIndex,
+            health: 15,
+          });
+        }
       }
     }
   }
