@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import { sendCoachMessage } from "./actions";
 import type { AgentKind, ChatTurn } from "@/features/agents";
 
@@ -8,14 +8,40 @@ export default function CoachChat({
   profileId,
   agent,
   initialHistory,
+  autoMessage,
 }: {
   profileId: string;
   agent: AgentKind;
   initialHistory: ChatTurn[];
+  /** If provided, this message is sent automatically as the opening user turn. */
+  autoMessage?: string;
 }) {
   const [messages, setMessages] = useState<ChatTurn[]>(initialHistory);
   const [input, setInput] = useState("");
   const [isPending, startTransition] = useTransition();
+  const autoSentRef = useRef(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to latest message
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isPending]);
+
+  // Send autoMessage once on mount (e.g. habit click from biome)
+  useEffect(() => {
+    if (autoMessage && !autoSentRef.current && !isPending) {
+      autoSentRef.current = true;
+      const userTurn: ChatTurn = { role: "user", content: autoMessage };
+      setMessages((m) => [...m, userTurn]);
+      startTransition(async () => {
+        const reply = await sendCoachMessage(profileId, agent, autoMessage);
+        if (reply) {
+          setMessages((m) => [...m, { role: "assistant", content: reply }]);
+        }
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function send() {
     const text = input.trim();
@@ -34,7 +60,7 @@ export default function CoachChat({
   return (
     <div className="flex h-[28rem] flex-col rounded-2xl bg-white/5 p-4">
       <div className="flex-1 space-y-3 overflow-y-auto pr-1">
-        {messages.length === 0 && (
+        {messages.length === 0 && !isPending && (
           <p className="mt-8 text-center text-sm text-white/40">
             Escríbele al Coach. Te va a empujar a la acción.
           </p>
@@ -62,6 +88,7 @@ export default function CoachChat({
             </span>
           </div>
         )}
+        <div ref={bottomRef} />
       </div>
 
       <div className="mt-3 flex gap-2">

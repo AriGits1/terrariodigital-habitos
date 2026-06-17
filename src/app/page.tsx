@@ -20,6 +20,8 @@ export default async function Home(props: {
 }) {
   const searchParams = props.searchParams ? await props.searchParams : {};
   const showCoach = searchParams.coach === "true";
+  const habitId = typeof searchParams.habitId === "string" ? searchParams.habitId : undefined;
+  const habitTitle = typeof searchParams.habitTitle === "string" ? decodeURIComponent(searchParams.habitTitle) : undefined;
 
   const profile = await getActiveProfile();
   const biome = profile?.biome;
@@ -86,7 +88,7 @@ export default async function Home(props: {
       )}
 
       {/* Coach Modal */}
-      {profile && showCoach && <CoachModal profileId={profile.id} />}
+      {profile && showCoach && <CoachModal profileId={profile.id} habitId={habitId} habitTitle={habitTitle} />}
 
       {/* Settings Button */}
       <div className="pointer-events-auto absolute bottom-4 right-4 md:bottom-6 md:right-6 z-10">

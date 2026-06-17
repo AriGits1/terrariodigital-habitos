@@ -23,12 +23,18 @@ export async function sendCoachMessage(
     data: { profileId, agent, role: "user", content: clean },
   });
 
-  // Reconstruct history for the agent.
+  // Reconstruct history for the agent — exclude the message we just inserted
+  // (the last row) because it is passed separately as `message` to the agent.
+  // Sending it in both places creates back-to-back user turns which violates
+  // the Gemini API's strict alternation requirement and causes silent fallback
+  // to the stub.
   const prior = await prisma.chatMessage.findMany({
     where: { profileId, agent },
     orderBy: { createdAt: "asc" },
   });
-  const history: ChatTurn[] = prior.map((m) => ({
+  // Drop the last entry — it's the user turn we just persisted above.
+  const historyRows = prior.slice(0, -1);
+  const history: ChatTurn[] = historyRows.map((m) => ({
     role: m.role as "user" | "assistant",
     content: m.content,
   }));

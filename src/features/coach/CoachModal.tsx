@@ -4,14 +4,33 @@ import CoachChat from "./CoachChat";
 import { X } from "lucide-react";
 import Link from "next/link";
 
-export default async function CoachModal({ profileId }: { profileId: string }) {
+export default async function CoachModal({
+  profileId,
+  habitId,
+  habitTitle,
+}: {
+  profileId: string;
+  habitId?: string;
+  habitTitle?: string;
+}) {
   const context = await getCoachContext(profileId);
-  const suggestion = await getAgents().coach(context);
   const history = await getChatHistory(profileId, "coach");
   const initialHistory: ChatTurn[] = history.map((m) => ({
     role: m.role as "user" | "assistant",
     content: m.content,
   }));
+
+  // If a habit was clicked, auto-generate an opening question about it
+  let habitQuestion: string | undefined;
+  if (habitId && habitTitle) {
+    const statusStr =
+      context.doneToday.includes(habitTitle)
+        ? "completado hoy"
+        : context.pendingToday.includes(habitTitle)
+        ? "pendiente para hoy"
+        : "registrado en tu semana";
+    habitQuestion = `Quiero hablar sobre mi hábito "${habitTitle}" (${statusStr}).`;
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm sm:justify-end sm:p-6">
@@ -33,17 +52,11 @@ export default async function CoachModal({ profileId }: { profileId: string }) {
         </div>
 
         <div className="flex-1 overflow-y-auto p-4">
-          <div className="mb-4 rounded-xl border border-emerald-400/30 bg-emerald-500/10 p-4">
-            <p className="text-[10px] uppercase tracking-wide text-emerald-300">
-              Sugerencia para ti
-            </p>
-            <p className="mt-1 text-sm text-emerald-100">{suggestion.message}</p>
-          </div>
-
           <CoachChat
             profileId={profileId}
             agent="coach"
             initialHistory={initialHistory}
+            autoMessage={habitQuestion}
           />
         </div>
       </div>
