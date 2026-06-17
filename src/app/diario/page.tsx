@@ -1,7 +1,7 @@
 import Link from "next/link";
 import VoiceDiary from "@/features/voice/VoiceDiary";
 import { getActiveProfile } from "@/features/profile/queries";
-import { getRecentMoods } from "@/features/mood/queries";
+import { getRecentMoods, hasSubmittedCardToday } from "@/features/mood/queries";
 import ReframeCard from "@/features/reframe/ReframeCard";
 
 import { Smile, Heart, Meh, AlertCircle, Frown } from "lucide-react";
@@ -32,15 +32,10 @@ export default async function DiarioPage() {
     );
   }
 
-  const moods = await getRecentMoods(profile.id, 7);
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const hasSubmittedToday = moods.some((m) => {
-    const d = new Date(m.date);
-    d.setHours(0, 0, 0, 0);
-    return d.getTime() === today.getTime();
-  });
+  const [moods, cardLocked] = await Promise.all([
+    getRecentMoods(profile.id, 7),
+    hasSubmittedCardToday(profile.id),
+  ]);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-emerald-950 to-zinc-900 p-6 text-white">
@@ -53,7 +48,7 @@ export default async function DiarioPage() {
 
       <div className="mx-auto flex max-w-5xl flex-col md:flex-row gap-6 items-start">
         <div className="flex-1 w-full max-w-2xl">
-        <VoiceDiary profileId={profile.id} hasSubmittedToday={hasSubmittedToday} />
+        <VoiceDiary profileId={profile.id} cardLockedToday={cardLocked} />
 
         {moods.length > 0 && (
           <section className="mt-6 rounded-2xl bg-white/5 p-5">

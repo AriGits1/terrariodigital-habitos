@@ -18,11 +18,12 @@ const MOOD_CARDS = [
   { icon: Frown, label: "Triste", mood: "sad", score: -0.7 },
 ];
 
-export default function VoiceDiary({ profileId, hasSubmittedToday }: { profileId: string, hasSubmittedToday?: boolean }) {
+export default function VoiceDiary({ profileId, cardLockedToday }: { profileId: string; cardLockedToday?: boolean }) {
   const { supported, listening, transcript, error, start, stop, reset } =
     useSpeechRecognition("es-ES");
   const [text, setText] = useState("");
   const [result, setResult] = useState<MoodResult | null>(null);
+  const [cardSubmittedThisSession, setCardSubmittedThisSession] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   function submit(source: "voice" | "text") {
@@ -39,11 +40,13 @@ export default function VoiceDiary({ profileId, hasSubmittedToday }: { profileId
   function submitCard(mood: string, score: number) {
     startTransition(async () => {
       await submitMoodCard(profileId, mood, score);
+      setCardSubmittedThisSession(true);
       setResult({ mood, score, reply: "Gracias por registrar cómo te sentís. Tu terrario lo refleja." });
     });
   }
 
-  const isDone = hasSubmittedToday || result !== null;
+  // Cards are restricted to 1 per day; voice and text have no daily limit.
+  const cardsLocked = cardLockedToday || cardSubmittedThisSession;
 
   return (
     <div className="flex flex-col gap-5 rounded-2xl bg-white/5 p-6 text-white backdrop-blur-md">
@@ -60,7 +63,7 @@ export default function VoiceDiary({ profileId, hasSubmittedToday }: { profileId
           <button
             type="button"
             onClick={listening ? stop : start}
-            disabled={isPending || isDone}
+            disabled={isPending}
             aria-label={listening ? "Detener grabación" : "Grabar diario por voz"}
             className={`flex h-20 w-20 items-center justify-center rounded-full text-3xl transition-all ${
               listening
@@ -82,7 +85,7 @@ export default function VoiceDiary({ profileId, hasSubmittedToday }: { profileId
             <button
               type="button"
               onClick={() => submit("voice")}
-              disabled={isPending || isDone}
+              disabled={isPending}
               className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-black disabled:opacity-40"
             >
               Registrar
@@ -105,7 +108,7 @@ export default function VoiceDiary({ profileId, hasSubmittedToday }: { profileId
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          disabled={isDone}
+          disabled={false}
           placeholder="…o escríbelo aquí"
           rows={3}
           className="resize-none rounded-lg bg-white/10 p-3 text-sm outline-none placeholder:text-white/40 focus:bg-white/20"
@@ -113,7 +116,7 @@ export default function VoiceDiary({ profileId, hasSubmittedToday }: { profileId
         <button
           type="button"
           onClick={() => submit("text")}
-          disabled={isPending || !text.trim() || isDone}
+          disabled={isPending || !text.trim()}
           className="self-end rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-black disabled:opacity-40"
         >
           Registrar texto
@@ -131,7 +134,7 @@ export default function VoiceDiary({ profileId, hasSubmittedToday }: { profileId
               key={c.mood}
               type="button"
               onClick={() => submitCard(c.mood, c.score)}
-              disabled={isPending || isDone}
+              disabled={isPending || cardsLocked}
               aria-label={c.label}
               className="flex flex-col items-center gap-1 rounded-xl bg-white/10 px-4 py-2 hover:bg-white/20"
             >
@@ -150,10 +153,11 @@ export default function VoiceDiary({ profileId, hasSubmittedToday }: { profileId
           </p>
           <p className="mt-1 text-sm">{result.reply}</p>
         </div>
-      ) : hasSubmittedToday ? (
+      ) : null}
+      {cardsLocked && !result ? (
         <div className="rounded-xl border border-white/20 bg-white/5 p-4 text-center">
           <p className="text-sm text-white/80">
-            Ya registraste tu emoción hoy. ¡Vuelve mañana!
+            Ya elegiste tu carta de hoy. ¡Vuelve mañana para elegir otra!
           </p>
         </div>
       ) : null}
