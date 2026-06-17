@@ -4,9 +4,9 @@ import { getActiveProfile } from "@/features/profile/queries";
 import { getRecentMoods, hasSubmittedCardToday } from "@/features/mood/queries";
 import ReframeCard from "@/features/reframe/ReframeCard";
 
-import { Smile, Heart, Meh, AlertCircle, Frown } from "lucide-react";
+import { Smile, Heart, Meh, AlertCircle, Frown, type LucideIcon } from "lucide-react";
 
-const MOOD_ICONS: Record<string, React.ElementType> = {
+const MOOD_ICONS: Record<string, LucideIcon> = {
   motivated: Smile,
   calm: Heart,
   neutral: Meh,
