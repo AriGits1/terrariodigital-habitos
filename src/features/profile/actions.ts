@@ -1,46 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-
-/**
- * Completes onboarding (UC-05). Creates the profile on first run, or updates
- * the existing one, then sends the user into the terrarium.
- */
-export async function completeOnboarding(
-  name: string,
-  biomeType: string,
-): Promise<void> {
-  const clean = name.trim() || "Invitado";
-  const existing = await prisma.profile.findFirst({
-    orderBy: { createdAt: "asc" },
-  });
-
-  if (existing) {
-    await prisma.profile.update({
-      where: { id: existing.id },
-      data: { name: clean, biomeType, onboarded: true },
-    });
-    await prisma.biomeState.upsert({
-      where: { profileId: existing.id },
-      create: { profileId: existing.id, type: biomeType },
-      update: { type: biomeType },
-    });
-  } else {
-    await prisma.profile.create({
-      data: {
-        name: clean,
-        biomeType,
-        onboarded: true,
-        biome: { create: { type: biomeType } },
-      },
-    });
-  }
-
-  revalidatePath("/");
-  redirect("/");
-}
+import { requireProfile } from "@/features/auth/guards";
 
 export interface SettingsInput {
   name: string;
@@ -49,13 +11,13 @@ export interface SettingsInput {
   hapticsEnabled: boolean;
 }
 
-/** Updates profile settings (RF-17). */
-export async function updateSettings(
-  profileId: string,
-  data: SettingsInput,
-): Promise<void> {
+/** Updates profile settings (RF-17). Resolves the target profile from the
+ *  current session — caller cannot supply a foreign profileId. */
+export async function updateSettings(data: SettingsInput): Promise<void> {
+  const profile = await requireProfile();
+
   await prisma.profile.update({
-    where: { id: profileId },
+    where: { id: profile.id },
     data: {
       name: data.name.trim() || "Invitado",
       biomeType: data.biomeType,
@@ -64,7 +26,7 @@ export async function updateSettings(
     },
   });
   await prisma.biomeState.update({
-    where: { profileId },
+    where: { profileId: profile.id },
     data: { type: data.biomeType },
   });
   revalidatePath("/");

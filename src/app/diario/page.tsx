@@ -1,6 +1,6 @@
 import Link from "next/link";
 import VoiceDiary from "@/features/voice/VoiceDiary";
-import { getActiveProfile } from "@/features/profile/queries";
+import { requireProfile } from "@/features/auth/guards";
 import { getRecentMoods, hasSubmittedCardToday } from "@/features/mood/queries";
 import ReframeCard from "@/features/reframe/ReframeCard";
 
@@ -23,14 +23,7 @@ const MOOD_ES: Record<string, string> = {
 };
 
 export default async function DiarioPage() {
-  const profile = await getActiveProfile();
-  if (!profile) {
-    return (
-      <main className="flex h-screen items-center justify-center bg-zinc-900 text-white">
-        <p>No hay perfil. Ejecutá el seed primero.</p>
-      </main>
-    );
-  }
+  const profile = await requireProfile();
 
   const [moods, cardLocked] = await Promise.all([
     getRecentMoods(profile.id, 7),

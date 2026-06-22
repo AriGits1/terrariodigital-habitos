@@ -6,10 +6,8 @@ import { BIOME_OPTIONS } from "@/features/biome/biome-options";
 import type { BiomeType } from "@/features/biome/biome-logic";
 
 export default function SettingsForm({
-  profileId,
   initial,
 }: {
-  profileId: string;
   initial: {
     name: string;
     biomeType: BiomeType;
@@ -26,7 +24,7 @@ export default function SettingsForm({
 
   function save() {
     startTransition(async () => {
-      await updateSettings(profileId, {
+      await updateSettings({
         name,
         biomeType,
         voiceEnabled,

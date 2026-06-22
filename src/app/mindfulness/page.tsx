@@ -1,16 +1,9 @@
 import Link from "next/link";
-import { getActiveProfile } from "@/features/profile/queries";
+import { requireProfile } from "@/features/auth/guards";
 import MindfulnessGuide from "@/features/mindfulness/MindfulnessGuide";
 
 export default async function MindfulnessPage() {
-  const profile = await getActiveProfile();
-  if (!profile) {
-    return (
-      <main className="flex h-screen items-center justify-center bg-zinc-900 text-white">
-        <p>No hay perfil. Ejecutá el seed primero.</p>
-      </main>
-    );
-  }
+  const profile = await requireProfile();
 
   return (
     <main className="flex min-h-screen flex-col bg-gradient-to-b from-emerald-950 to-zinc-950 p-6 text-white">

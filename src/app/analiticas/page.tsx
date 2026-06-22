@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getActiveProfile } from "@/features/profile/queries";
+import { requireProfile } from "@/features/auth/guards";
 import { getAnalyticsData } from "@/features/analytics/queries";
 import {
   completionRate,
@@ -10,7 +10,7 @@ import {
 
 import { Smile, Heart, Meh, AlertCircle, Frown } from "lucide-react";
 
-const MOOD_ICONS: Record<string, React.ElementType> = {
+const MOOD_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   motivated: Smile,
   calm: Heart,
   neutral: Meh,
@@ -19,14 +19,7 @@ const MOOD_ICONS: Record<string, React.ElementType> = {
 };
 
 export default async function AnaliticasPage() {
-  const profile = await getActiveProfile();
-  if (!profile) {
-    return (
-      <main className="flex h-screen items-center justify-center bg-zinc-900 text-white">
-        <p>No hay perfil. Ejecutá el seed primero.</p>
-      </main>
-    );
-  }
+  const profile = await requireProfile();
 
   const { habits, logs, moods } = await getAnalyticsData(profile.id);
   const week = weeklyScores(habits, logs);

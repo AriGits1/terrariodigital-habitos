@@ -20,6 +20,7 @@ datasource db {
 }
 
 /// The single local user profile for the MVP. Drives biome personalization.
+/// Auth fields (email, passwordHash, role) are nullable for zero-downtime migration.
 model Profile {
   id            String   @id @default(cuid())
   name          String
@@ -32,11 +33,30 @@ model Profile {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  habits      Habit[]
-  moodEntries MoodEntry[]
-  messages    ChatMessage[]
-  sessions    MindfulnessSession[]
-  biome       BiomeState?
+  /// Auth fields — nullable so existing rows survive migration without backfill.
+  email        String?  @unique
+  passwordHash String?
+  role         String   @default("user")
+
+  habits       Habit[]
+  moodEntries  MoodEntry[]
+  messages     ChatMessage[]
+  sessions     MindfulnessSession[]
+  biome        BiomeState?
+  authSessions Session[]
+}
+
+/// DB-backed opaque session. Cookie carries only the token; profile is resolved server-side.
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  profileId String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
 }
 
 /// A trackable habit (RF-01). Weight expresses relative importance for the

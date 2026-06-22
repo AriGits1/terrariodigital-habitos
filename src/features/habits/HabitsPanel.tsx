@@ -43,10 +43,8 @@ function reduce(state: HabitView[], action: OptimisticAction): HabitView[] {
 }
 
 export default function HabitsPanel({
-  profileId,
   habits,
 }: {
-  profileId: string;
   habits: HabitView[];
 }) {
   // Optimistic state makes the list respond instantly; the server revalidation
@@ -78,7 +76,7 @@ export default function HabitsPanel({
     setNewWeight(3);
     startTransition(async () => {
       applyOptimistic({ kind: "add", title, weight });
-      await addHabit(profileId, title, weight);
+      await addHabit(title, weight);
     });
   }
 

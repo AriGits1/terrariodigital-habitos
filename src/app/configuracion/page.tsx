@@ -1,17 +1,11 @@
 import Link from "next/link";
-import { getActiveProfile } from "@/features/profile/queries";
+import { requireProfile } from "@/features/auth/guards";
+import { logoutAction } from "@/features/auth/actions";
 import SettingsForm from "@/features/settings/SettingsForm";
 import type { BiomeType } from "@/features/biome/biome-logic";
 
 export default async function ConfiguracionPage() {
-  const profile = await getActiveProfile();
-  if (!profile) {
-    return (
-      <main className="flex h-screen items-center justify-center bg-zinc-900 text-white">
-        <p>No hay perfil. Ejecutá el seed primero.</p>
-      </main>
-    );
-  }
+  const profile = await requireProfile();
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-zinc-900 to-emerald-950 p-6 text-white">
@@ -19,12 +13,24 @@ export default async function ConfiguracionPage() {
         <Link href="/" className="text-sm text-white/60 hover:text-white">
           ← Volver al terrario
         </Link>
+        <form
+          action={async () => {
+            "use server";
+            await logoutAction();
+          }}
+        >
+          <button
+            type="submit"
+            className="rounded-lg bg-white/10 px-3 py-1 text-sm text-white/70 hover:bg-white/20 hover:text-white transition"
+          >
+            Sign out
+          </button>
+        </form>
       </header>
 
       <div className="mx-auto max-w-xl">
         <h1 className="mb-5 text-2xl font-semibold">Configuración</h1>
         <SettingsForm
-          profileId={profile.id}
           initial={{
             name: profile.name,
             biomeType: profile.biomeType as BiomeType,

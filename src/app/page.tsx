@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { Mic, BarChart2, Wind, Settings } from "lucide-react";
+import { Mic, BarChart2, Wind, Settings, Shield } from "lucide-react";
 
 import type { BiomeType } from "@/features/biome/biome-logic";
-import { getActiveProfile } from "@/features/profile/queries";
+import { requireProfile } from "@/features/auth/guards";
 import HabitsPanel from "@/features/habits/HabitsPanel";
 import { getHabitsWithTodayStatus } from "@/features/habits/queries";
 import CoachModal from "@/features/coach/CoachModal";
@@ -23,16 +23,14 @@ export default async function Home(props: {
   const habitId = typeof searchParams.habitId === "string" ? searchParams.habitId : undefined;
   const habitTitle = typeof searchParams.habitTitle === "string" ? decodeURIComponent(searchParams.habitTitle) : undefined;
 
-  const profile = await getActiveProfile();
-  const biome = profile?.biome;
+  const profile = await requireProfile();
+  const biome = profile.biome;
 
   const type = (biome?.type ?? "forest") as BiomeType;
   const growth = biome?.growth ?? 20;
   const health = biome?.health ?? 80;
 
-  const habits = profile
-    ? await getHabitsWithTodayStatus(profile.id)
-    : [];
+  const habits = await getHabitsWithTodayStatus(profile.id);
 
   return (
     <main className="relative h-[100dvh] w-screen overflow-hidden">
@@ -52,7 +50,7 @@ export default async function Home(props: {
             Terrario Digital
           </h1>
           <p className="text-sm text-white/80 drop-shadow">
-            {profile ? `Hola, ${profile.name}` : "Sin perfil — ejecuta el seed"}
+            {`Hola, ${profile.name}`}
           </p>
         </div>
 
@@ -71,6 +69,19 @@ export default async function Home(props: {
               {item.label}
             </Link>
           ))}
+
+          {/* Admin link: visible only to admins. Authorization is still
+              enforced server-side by requireAdmin() — this is convenience,
+              not a security boundary. */}
+          {profile.role === "admin" && (
+            <Link
+              href="/admin"
+              className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/25 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm hover:bg-emerald-500/40 md:px-4 md:py-1.5 md:text-sm"
+            >
+              <Shield className="h-3.5 w-3.5 md:h-4 md:w-4" />
+              Admin
+            </Link>
+          )}
         </nav>
 
         <div className="flex gap-2 md:gap-3">
@@ -81,14 +92,12 @@ export default async function Home(props: {
       </header>
 
       {/* Habits panel: bottom sheet on mobile, side panel on desktop. */}
-      {profile && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 p-3 md:inset-x-auto md:right-0 md:top-0 md:bottom-auto md:h-full md:p-6">
-          <HabitsPanel profileId={profile.id} habits={habits} />
-        </div>
-      )}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 p-3 md:inset-x-auto md:right-0 md:top-0 md:bottom-auto md:h-full md:p-6">
+        <HabitsPanel habits={habits} />
+      </div>
 
       {/* Coach Modal */}
-      {profile && showCoach && <CoachModal profileId={profile.id} habitId={habitId} habitTitle={habitTitle} />}
+      {showCoach && <CoachModal profileId={profile.id} habitId={habitId} habitTitle={habitTitle} />}
 
       {/* Settings Button */}
       <div className="pointer-events-auto absolute bottom-4 right-4 md:bottom-6 md:right-6 z-10">
