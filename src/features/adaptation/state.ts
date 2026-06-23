@@ -108,7 +108,7 @@ export function buildReason(model: AdaptationModel): string {
     return "Tus registros de ánimo recientes muestran una racha difícil, así que priorizamos respiración y diario para acompañarte.";
   if (model.moodEwma >= MOOD_POSITIVE_THRESHOLD)
     return "Tus registros de ánimo recientes muestran una tendencia positiva, así que mostramos primero tu progreso.";
-  return "Ordenamos tus secciones según lo que venís usando últimamente para que tengas a mano lo más relevante.";
+  return "Ordenamos tus secciones según lo que vienes usando últimamente para que tengas a mano lo más relevante.";
 }
 
 // ---------------------------------------------------------------------------

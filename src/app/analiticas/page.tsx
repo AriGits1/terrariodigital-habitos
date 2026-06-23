@@ -45,7 +45,7 @@ export default async function AnaliticasPage() {
           <Stat label="Cumplimiento 7d" value={`${rate7}%`} />
           <Stat
             label="Bioma"
-            value={`${profile.biome?.growth ?? 0}% 🌿`}
+            value={`${profile.biome?.growth ?? 0}% `}
           />
         </div>
 

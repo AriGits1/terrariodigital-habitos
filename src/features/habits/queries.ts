@@ -66,9 +66,9 @@ export async function getHabitSuggestions(
   }
 
   const LEVEL_UP_REASON =
-    "Llevás varias semanas completando este hábito con consistencia; quizá quieras subir un poco la exigencia.";
+    "Llevas varias semanas completando este hábito con consistencia; quizá quieras subir un poco la exigencia.";
   const EASE_REASON =
-    "Notamos que este hábito te viene costando últimamente; podés bajarle la dificultad sin culpa.";
+    "Notamos que este hábito te viene costando últimamente; puedes bajarle la dificultad sin culpa.";
 
   const result = new Map<string, { suggestion: DifficultySuggestion; reason: string | null }>();
   for (const habit of habits) {

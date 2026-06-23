@@ -73,7 +73,7 @@ export default async function ComunidadPage() {
           </h2>
           {inbox.items.length === 0 ? (
             <p className="rounded-xl bg-white/5 p-6 text-sm text-white/50 text-center">
-              Tu bandeja está vacía. Visitá un terrario para enviar aliento.
+              Tu bandeja está vacía. Visita un terrario para enviar aliento.
             </p>
           ) : (
             <ul className="flex flex-col gap-2">
@@ -87,7 +87,7 @@ export default async function ComunidadPage() {
                       <p className="text-sm">
                         <span className="font-medium text-emerald-400">{item.fromName}</span>
                         {" "}
-                        {item.type === "water" ? "te envió agua" : "te envió kudos"}
+                        {item.type === "water" ? "te envió agua" : "te envió una felicitación"}
                       </p>
                       {item.message && (
                         <p className="mt-1 text-sm text-white/70 italic">{item.message}</p>

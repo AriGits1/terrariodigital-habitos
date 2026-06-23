@@ -73,7 +73,7 @@ export default function EncouragementForm({
               : "border-white/10 text-white/50 hover:border-white/30"
           }`}
         >
-          Kudos
+          Felicitación
         </button>
       </div>
 

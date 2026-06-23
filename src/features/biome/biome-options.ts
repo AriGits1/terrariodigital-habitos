@@ -11,5 +11,5 @@ export interface BiomeOption {
 export const BIOME_OPTIONS: BiomeOption[] = [
   { type: "forest", label: "Bosque", emoji: "🌲", desc: "Frondoso y vital" },
   { type: "desert", label: "Desierto", emoji: "🏜️", desc: "Resiliente y sereno" },
-  { type: "zen", label: "Jardín Zen", emoji: "🪷", desc: "Calmo y equilibrado" },
+  { type: "zen", label: "Jardín Zen", emoji: "🪷", desc: "Tranquilo y equilibrado" },
 ];
