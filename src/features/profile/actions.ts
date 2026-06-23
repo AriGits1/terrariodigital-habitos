@@ -10,6 +10,7 @@ export interface SettingsInput {
   biomeType: string;
   voiceEnabled: boolean;
   hapticsEnabled: boolean;
+  shareTerrarium?: boolean;
   adaptationOverrides?: {
     moduleOrder?: ModuleKey[] | null; // null = clear override
     difficultyOff?: boolean;
@@ -28,6 +29,7 @@ export async function updateSettings(data: SettingsInput): Promise<void> {
       biomeType: data.biomeType,
       voiceEnabled: data.voiceEnabled,
       hapticsEnabled: data.hapticsEnabled,
+      shareTerrarium: data.shareTerrarium,
     },
   });
   await prisma.biomeState.update({

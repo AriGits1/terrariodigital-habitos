@@ -38,6 +38,9 @@ model Profile {
   passwordHash String?
   role         String   @default("user")
 
+  /// Opt-in: when true, this profile is visible in the cohort and its terrarium is visitable.
+  shareTerrarium Boolean @default(false)
+
   habits       Habit[]
   moodEntries  MoodEntry[]
   messages     ChatMessage[]
@@ -45,6 +48,9 @@ model Profile {
   biome        BiomeState?
   adaptation   AdaptationState?
   authSessions Session[]
+
+  sentEncouragements     Encouragement[] @relation("EncouragementFrom")
+  receivedEncouragements Encouragement[] @relation("EncouragementTo")
 }
 
 /// DB-backed opaque session. Cookie carries only the token; profile is resolved server-side.
@@ -188,4 +194,25 @@ model MindfulnessSession {
   profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
   @@index([profileId])
+}
+
+/// Async cooperative signal sent from one cohort member to another.
+/// type = "water" | "kudos" (SQLite has no enums — documented String).
+model Encouragement {
+  id            String   @id @default(cuid())
+  fromProfileId String
+  toProfileId   String
+  /// "water" (quick gesture) | "kudos" (optionally LLM-suggested message).
+  type          String
+  /// Optional free-text note; null for a bare "water".
+  message       String?
+  read          Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  fromProfile Profile @relation("EncouragementFrom", fields: [fromProfileId], references: [id], onDelete: Cascade)
+  toProfile   Profile @relation("EncouragementTo",   fields: [toProfileId],   references: [id], onDelete: Cascade)
+
+  /// Inbox query: recipient's unread-first feed.
+  @@index([toProfileId, read])
+  @@index([fromProfileId])
 }

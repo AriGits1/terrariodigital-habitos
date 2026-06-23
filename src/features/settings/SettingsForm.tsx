@@ -13,12 +13,14 @@ export default function SettingsForm({
     biomeType: BiomeType;
     voiceEnabled: boolean;
     hapticsEnabled: boolean;
+    shareTerrarium: boolean;
   };
 }) {
   const [name, setName] = useState(initial.name);
   const [biomeType, setBiomeType] = useState<BiomeType>(initial.biomeType);
   const [voiceEnabled, setVoiceEnabled] = useState(initial.voiceEnabled);
   const [hapticsEnabled, setHapticsEnabled] = useState(initial.hapticsEnabled);
+  const [shareTerrarium, setShareTerrarium] = useState(initial.shareTerrarium);
   const [showToast, setShowToast] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -29,6 +31,7 @@ export default function SettingsForm({
         biomeType,
         voiceEnabled,
         hapticsEnabled,
+        shareTerrarium,
       });
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
@@ -78,6 +81,12 @@ export default function SettingsForm({
         hint="Vibración guía en respiración"
         checked={hapticsEnabled}
         onChange={setHapticsEnabled}
+      />
+      <Toggle
+        label="Compartir terrario"
+        hint="Tu terrario aparece en el tablero comunitario"
+        checked={shareTerrarium}
+        onChange={setShareTerrarium}
       />
 
       <div className="flex justify-center mt-4">

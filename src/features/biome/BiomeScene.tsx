@@ -21,6 +21,7 @@ import type { HabitView } from "@/features/habits/HabitsPanel";
 interface BiomeSceneProps {
   type: BiomeType;
   habits: HabitView[];
+  readOnly?: boolean;
 }
 
 /** Wraps a plant so it sways gently and sits at its placement. */
@@ -31,6 +32,7 @@ function SwayGroup({
   onClick,
   onHover,
   onUnhover,
+  disableCursor,
   children,
 }: {
   placement: PlantPlacement;
@@ -39,6 +41,8 @@ function SwayGroup({
   onClick: () => void;
   onHover: (e: { clientX: number; clientY: number }) => void;
   onUnhover: () => void;
+  /** MF-1 guard B: when true, suppresses pointer cursor and hover tooltip in read-only mode. */
+  disableCursor?: boolean;
   children: React.ReactNode;
 }) {
   const ref = useRef<Group>(null);
@@ -60,12 +64,17 @@ function SwayGroup({
       }}
       onPointerOver={(e) => {
         e.stopPropagation();
-        onHover({ clientX: e.clientX, clientY: e.clientY });
-        document.body.style.cursor = "pointer";
+        if (!disableCursor) {
+          // MF-1 guard B: skip cursor and tooltip when in read-only visit mode
+          onHover({ clientX: e.clientX, clientY: e.clientY });
+          document.body.style.cursor = "pointer";
+        }
       }}
       onPointerMove={(e) => {
         e.stopPropagation();
-        onHover({ clientX: e.clientX, clientY: e.clientY });
+        if (!disableCursor) {
+          onHover({ clientX: e.clientX, clientY: e.clientY });
+        }
       }}
       onPointerOut={() => {
         onUnhover();
@@ -226,7 +235,7 @@ function Ground({ color }: { color: string }) {
   );
 }
 
-export default function BiomeScene({ type, habits }: BiomeSceneProps) {
+export default function BiomeScene({ type, habits, readOnly = false }: BiomeSceneProps) {
   useEffect(() => {
     const originalWarn = console.warn;
     console.warn = (...args) => {
@@ -323,7 +332,9 @@ export default function BiomeScene({ type, habits }: BiomeSceneProps) {
               placement={p}
               vitalityLevel={v}
               swayOffset={i * 0.7}
+              disableCursor={readOnly && isMain}
               onClick={() => {
+                if (readOnly) return; // MF-1 guard A: no click-to-coach in visit mode
                 if (isMain && p.habitId) {
                   const habitTitle = encodeURIComponent(p.habitTitle ?? "");
                   router.push(`?coach=true&habitId=${p.habitId}&habitTitle=${habitTitle}`, { scroll: false });

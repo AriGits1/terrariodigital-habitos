@@ -2,6 +2,8 @@
 // never on a concrete provider. Today a keyword stub implements it; tomorrow a
 // Gemini-backed implementation does — swapping is a one-line factory change.
 
+import type { BiomeType } from "../biome/biome-logic";
+
 export interface MoodInference {
   /** Label: "motivated" | "calm" | "anxious" | "sad" | "neutral". */
   mood: string;
@@ -48,4 +50,6 @@ export interface Agents {
   ): Promise<string>;
   /** Cognitive reframe of a negative thought (UC-02). */
   reframe(thought: string): Promise<string>;
+  /** Suggest a short, warm encouragement message for a peer's terrarium (kudos UX). */
+  suggestEncouragement(recipientName: string, biomeType: BiomeType): Promise<string>;
 }

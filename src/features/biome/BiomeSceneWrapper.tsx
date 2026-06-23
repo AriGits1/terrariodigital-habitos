@@ -10,9 +10,11 @@ const BiomeScene = dynamic(() => import("./BiomeScene"), { ssr: false });
 export default function BiomeSceneWrapper({
   type,
   habits,
+  readOnly = false,
 }: {
   type: BiomeType;
   habits: HabitView[];
+  readOnly?: boolean;
 }) {
-  return <BiomeScene type={type} habits={habits} />;
+  return <BiomeScene type={type} habits={habits} readOnly={readOnly} />;
 }

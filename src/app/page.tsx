@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Mic, BarChart2, Wind, Settings, Shield } from "lucide-react";
+import { Mic, BarChart2, Wind, Settings, Shield, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 import type { BiomeType } from "@/features/biome/biome-logic";
@@ -103,6 +103,14 @@ export default async function Home(props: {
           {/* Admin link: visible only to admins. Authorization is still
               enforced server-side by requireAdmin() — this is convenience,
               not a security boundary. */}
+          <Link
+            href="/comunidad"
+            className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm hover:bg-white/25 md:px-4 md:py-1.5 md:text-sm"
+          >
+            <Users className="h-3.5 w-3.5 md:h-4 md:w-4" />
+            Comunidad
+          </Link>
+
           {profile.role === "admin" && (
             <Link
               href="/admin"
