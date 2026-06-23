@@ -5,6 +5,8 @@ import { prisma } from "@/lib/db";
 import { requireProfile } from "@/features/auth/guards";
 import { computeVitals, dayAt } from "./gamification";
 import { getVitalsData } from "./queries";
+import { recomputeAdaptation } from "@/features/adaptation/state";
+import { suggestHabitDifficulty, nextWeight } from "@/features/adaptation/engine";
 
 /**
  * Recomputes the biome vitals for a profile from its current habit history and
@@ -49,6 +51,11 @@ export async function toggleHabitToday(habitId: string): Promise<void> {
   }
 
   await refreshBiome(profile.id);
+  await recomputeAdaptation(profile.id, {
+    kind: "habit",
+    habitId,
+    completed: !existing,
+  });
   revalidatePath("/");
   revalidatePath("/habitos");
 }
@@ -94,6 +101,56 @@ export async function archiveHabit(habitId: string): Promise<void> {
   await prisma.habit.update({
     where: { id: habitId },
     data: { archived: true },
+  });
+
+  await refreshBiome(profile.id);
+  revalidatePath("/");
+  revalidatePath("/habitos");
+}
+
+/**
+ * Accepts or rejects a difficulty suggestion for a habit (Surface 1 — mixed-initiative HCI).
+ * On accept: reads current EWMA, computes nextWeight, writes Habit.weight, refreshes biome.
+ * On reject: no-op. Habit.weight is NEVER written by recomputeAdaptation — only here.
+ */
+export async function applyDifficultySuggestion(
+  habitId: string,
+  accept: boolean,
+): Promise<void> {
+  if (!accept) return; // rejection is a no-op
+
+  const profile = await requireProfile();
+
+  const habit = await prisma.habit.findUnique({
+    where: { id: habitId },
+    select: { profileId: true, weight: true },
+  });
+  if (!habit || habit.profileId !== profile.id) return;
+
+  // Read AdaptationState to get the current habit EWMA
+  const state = await prisma.adaptationState.findUnique({
+    where: { profileId: profile.id },
+    select: { habitEwma: true },
+  });
+
+  let habitEwmaValue = 0;
+  if (state) {
+    try {
+      const parsed = JSON.parse(state.habitEwma);
+      if (parsed && typeof parsed === "object" && typeof parsed[habitId] === "number") {
+        habitEwmaValue = parsed[habitId];
+      }
+    } catch {
+      // malformed JSON — use default
+    }
+  }
+
+  const suggestion = suggestHabitDifficulty(habitEwmaValue, habit.weight);
+  const newWeight = nextWeight(suggestion, habit.weight);
+
+  await prisma.habit.update({
+    where: { id: habitId },
+    data: { weight: newWeight },
   });
 
   await refreshBiome(profile.id);

@@ -1,8 +1,9 @@
 "use client";
 
-import { useOptimistic, useState, useTransition } from "react";
+import { useOptimistic, useState, useTransition, type TransitionStartFunction } from "react";
 import Link from "next/link";
-import { addHabit, archiveHabit, toggleHabitToday } from "./actions";
+import { addHabit, archiveHabit, toggleHabitToday, applyDifficultySuggestion } from "./actions";
+import type { DifficultySuggestion } from "@/features/adaptation/engine";
 import { Check, X, MessageCircle, Plus } from "lucide-react";
 
 export interface HabitView {
@@ -13,6 +14,8 @@ export interface HabitView {
   doneToday: boolean;
   weeklyLogs?: string[];
   createdAt?: string;
+  suggestion?: DifficultySuggestion;
+  suggestionReason?: string | null;
 }
 
 type OptimisticAction =
@@ -96,36 +99,46 @@ export default function HabitsPanel({
 
       <ul className="flex flex-col gap-2">
         {optimisticHabits.map((h) => (
-          <li key={h.id} className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => toggle(h.id)}
-              aria-pressed={h.doneToday}
-              aria-label={`Marcar "${h.title}" como ${h.doneToday ? "pendiente" : "completado"}`}
-              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
-                h.doneToday
-                  ? "border-emerald-400 bg-emerald-400 text-black"
-                  : "border-white/40 bg-transparent"
-              }`}
-            >
-              {h.doneToday ? <Check className="h-4 w-4 stroke-[3]" /> : null}
-            </button>
-            <span
-              className={`flex-1 text-sm ${h.doneToday ? "text-white/60 line-through" : ""}`}
-            >
-              {h.title}
-            </span>
-            <span className="text-xs text-white/40" title={`Peso ${h.weight}`}>
-              {"●".repeat(h.weight)}
-            </span>
-            <button
-              type="button"
-              onClick={() => remove(h.id)}
-              aria-label={`Archivar "${h.title}"`}
-              className="text-white/30 hover:text-red-300"
-            >
-              <X className="h-4 w-4" />
-            </button>
+          <li key={h.id} className="flex flex-col gap-1">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => toggle(h.id)}
+                aria-pressed={h.doneToday}
+                aria-label={`Marcar "${h.title}" como ${h.doneToday ? "pendiente" : "completado"}`}
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                  h.doneToday
+                    ? "border-emerald-400 bg-emerald-400 text-black"
+                    : "border-white/40 bg-transparent"
+                }`}
+              >
+                {h.doneToday ? <Check className="h-4 w-4 stroke-[3]" /> : null}
+              </button>
+              <span
+                className={`flex-1 text-sm ${h.doneToday ? "text-white/60 line-through" : ""}`}
+              >
+                {h.title}
+              </span>
+              <span className="text-xs text-white/40" title={`Peso ${h.weight}`}>
+                {"●".repeat(h.weight)}
+              </span>
+              <button
+                type="button"
+                onClick={() => remove(h.id)}
+                aria-label={`Archivar "${h.title}"`}
+                className="text-white/30 hover:text-red-300"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            {(h.suggestion === "level-up" || h.suggestion === "ease") && (
+              <SuggestionChip
+                habitId={h.id}
+                suggestion={h.suggestion}
+                reason={h.suggestionReason ?? null}
+                startTransition={startTransition}
+              />
+            )}
           </li>
         ))}
         {optimisticHabits.length === 0 && (
@@ -182,5 +195,67 @@ export default function HabitsPanel({
         </Link>
       </div>
     </aside>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// SuggestionChip — non-blocking difficulty suggestion UI (Surface 1)
+// ---------------------------------------------------------------------------
+
+function SuggestionChip({
+  habitId,
+  suggestion,
+  reason,
+  startTransition,
+}: {
+  habitId: string;
+  suggestion: "level-up" | "ease";
+  reason: string | null;
+  startTransition: TransitionStartFunction;
+}) {
+  const label = suggestion === "level-up" ? "Subir dificultad" : "Bajar dificultad";
+
+  function handleAccept() {
+    startTransition(async () => {
+      await applyDifficultySuggestion(habitId, true);
+    });
+  }
+
+  function handleReject() {
+    startTransition(async () => {
+      await applyDifficultySuggestion(habitId, false);
+    });
+  }
+
+  return (
+    <div className="ml-10 flex flex-col gap-1">
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-amber-300/90 font-medium">{label}</span>
+        <button
+          type="button"
+          onClick={handleAccept}
+          className="rounded bg-emerald-500/30 px-2 py-0.5 text-xs text-emerald-300 hover:bg-emerald-500/50 transition-colors"
+          aria-label={`Aceptar sugerencia: ${label}`}
+        >
+          Aceptar
+        </button>
+        <button
+          type="button"
+          onClick={handleReject}
+          className="rounded bg-white/10 px-2 py-0.5 text-xs text-white/60 hover:bg-white/20 transition-colors"
+          aria-label="Rechazar sugerencia"
+        >
+          Ignorar
+        </button>
+      </div>
+      {reason && (
+        <details className="text-xs text-white/50">
+          <summary className="cursor-pointer hover:text-white/70 list-none underline decoration-dotted">
+            ¿por qué veo esto?
+          </summary>
+          <p className="mt-1 text-white/60 leading-snug">{reason}</p>
+        </details>
+      )}
+    </div>
   );
 }

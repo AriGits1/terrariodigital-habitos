@@ -1,11 +1,14 @@
 import Link from "next/link";
 import { Mic, BarChart2, Wind, Settings, Shield } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 import type { BiomeType } from "@/features/biome/biome-logic";
 import { requireProfile } from "@/features/auth/guards";
 import HabitsPanel from "@/features/habits/HabitsPanel";
-import { getHabitsWithTodayStatus } from "@/features/habits/queries";
+import { getHabitsWithTodayStatus, getHabitSuggestions } from "@/features/habits/queries";
 import CoachModal from "@/features/coach/CoachModal";
+import { getAdaptiveHomeData } from "@/features/adaptation/state";
+import type { ModuleKey } from "@/features/adaptation/engine";
 
 import BiomeSceneWrapper from "@/features/biome/BiomeSceneWrapper";
 
@@ -13,6 +16,13 @@ const BIOME_LABELS: Record<BiomeType, string> = {
   forest: "Bosque",
   desert: "Desierto",
   zen: "Jardín Zen",
+};
+
+// Nav lookup map — keyed by ModuleKey so adaptive ordering can drive rendering.
+const NAV: Record<ModuleKey, { href: string; label: string; icon: LucideIcon }> = {
+  diario:      { href: "/diario",      label: "Diario",     icon: Mic },
+  analiticas:  { href: "/analiticas",  label: "Analíticas", icon: BarChart2 },
+  mindfulness: { href: "/mindfulness", label: "Respiración", icon: Wind },
 };
 
 export default async function Home(props: {
@@ -30,7 +40,20 @@ export default async function Home(props: {
   const growth = biome?.growth ?? 20;
   const health = biome?.health ?? 80;
 
-  const habits = await getHabitsWithTodayStatus(profile.id);
+  // Parallel reads: habit query and adaptive home data do not depend on each other.
+  const [habits, homeData, habitSuggestions] = await Promise.all([
+    getHabitsWithTodayStatus(profile.id),
+    getAdaptiveHomeData(profile.id),
+    getHabitSuggestions(profile.id),
+  ]);
+
+  const { moduleOrder, lowEngagement, adaptationReason } = homeData;
+
+  // Merge suggestions into habits for HabitsPanel
+  const habitsWithSuggestions = habits.map((h) => {
+    const s = habitSuggestions.get(h.id);
+    return s ? { ...h, suggestion: s.suggestion, suggestionReason: s.reason } : h;
+  });
 
   return (
     <main className="relative h-[100dvh] w-screen overflow-hidden">
@@ -55,20 +78,27 @@ export default async function Home(props: {
         </div>
 
         <nav className="pointer-events-auto flex flex-wrap gap-2">
-          {[
-            { href: "/diario", label: "Diario", icon: Mic },
-            { href: "/analiticas", label: "Analíticas", icon: BarChart2 },
-            { href: "/mindfulness", label: "Respiración", icon: Wind },
-          ].map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm hover:bg-white/25 md:px-4 md:py-1.5 md:text-sm"
-            >
-              <item.icon className="h-3.5 w-3.5 md:h-4 md:w-4" />
-              {item.label}
-            </Link>
-          ))}
+          {moduleOrder.map((k) => {
+            const item = NAV[k];
+            const hasLowEngagement = lowEngagement.has(k);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="relative inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm hover:bg-white/25 md:px-4 md:py-1.5 md:text-sm"
+              >
+                <item.icon className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                {item.label}
+                {hasLowEngagement && (
+                  <span
+                    className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-amber-400"
+                    title="Hace tiempo que no visitás esta sección"
+                    aria-label="Sección sin visitar recientemente"
+                  />
+                )}
+              </Link>
+            );
+          })}
 
           {/* Admin link: visible only to admins. Authorization is still
               enforced server-side by requireAdmin() — this is convenience,
@@ -84,6 +114,18 @@ export default async function Home(props: {
           )}
         </nav>
 
+        {/* Transparency affordance — shown only after adaptation has computed a reason */}
+        {adaptationReason && (
+          <details className="pointer-events-auto max-w-xs">
+            <summary className="cursor-pointer text-xs text-white/60 underline decoration-dotted hover:text-white/80 list-none">
+              ¿por qué veo esto?
+            </summary>
+            <p className="mt-1 rounded-lg bg-black/40 px-3 py-2 text-xs text-white/80 backdrop-blur-sm">
+              {adaptationReason}
+            </p>
+          </details>
+        )}
+
         <div className="flex gap-2 md:gap-3">
           <StatCard label="Bioma" value={BIOME_LABELS[type]} />
           <StatCard label="Crecimiento" value={`${growth}%`} />
@@ -93,7 +135,7 @@ export default async function Home(props: {
 
       {/* Habits panel: bottom sheet on mobile, side panel on desktop. */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 p-3 md:inset-x-auto md:right-0 md:top-0 md:bottom-auto md:h-full md:p-6">
-        <HabitsPanel habits={habits} />
+        <HabitsPanel habits={habitsWithSuggestions} />
       </div>
 
       {/* Coach Modal */}
