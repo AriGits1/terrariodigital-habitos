@@ -43,6 +43,7 @@ model Profile {
   messages     ChatMessage[]
   sessions     MindfulnessSession[]
   biome        BiomeState?
+  adaptation   AdaptationState?
   authSessions Session[]
 }
 
@@ -128,6 +129,34 @@ model BiomeState {
   growth    Int      @default(20)
   /// 0-100 health; drops with missed habits, raised by completions.
   health    Int      @default(80)
+  updatedAt DateTime @updatedAt
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+/// Per-user adaptation model (continuous personalization). One row per profile.
+/// EWMA maps are stored as JSON-encoded text (SQLite has no JSON type) and
+/// validated at the app layer by parseAdaptationState() in adaptation/state.ts.
+model AdaptationState {
+  id        String  @id @default(cuid())
+  profileId String  @unique
+
+  /// JSON text: Record<habitId, number> — per-habit completion EWMA (0..1).
+  habitEwma        String @default("{}")
+  /// Scalar mood valence EWMA (-1..1).
+  moodEwma         Float  @default(0)
+  /// JSON text: Record<ModuleKey, number> — per-module engagement EWMA (0..1).
+  engagementEwma   String @default("{}")
+
+  /// Human-readable transparency string for "¿por qué veo esto?". Nullable until first compute.
+  adaptationReason String?
+
+  /// Override: JSON text ModuleKey[] | null. When set, getModuleOrder
+  /// is bypassed and this fixed order wins over the engine.
+  moduleOrderOverride String?
+  /// Override: when true, the engine NEVER auto-suggests difficulty changes.
+  difficultyOverride  Boolean @default(false)
+
   updatedAt DateTime @updatedAt
 
   profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
