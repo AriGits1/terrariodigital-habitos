@@ -36,6 +36,7 @@ export default async function ConfiguracionPage() {
             biomeType: profile.biomeType as BiomeType,
             voiceEnabled: profile.voiceEnabled,
             hapticsEnabled: profile.hapticsEnabled,
+            shareTerrarium: profile.shareTerrarium,
           }}
         />
       </div>

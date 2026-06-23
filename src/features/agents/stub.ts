@@ -10,6 +10,7 @@ import type {
   CoachSuggestion,
   MoodInference,
 } from "./types";
+import type { BiomeType } from "../biome/biome-logic";
 
 const POSITIVE = [
   "bien", "feliz", "contento", "contenta", "energía", "energia", "motivado",
@@ -47,6 +48,26 @@ const THERAPIST_REPLIES: Record<string, string> = {
   sad:
     "Lamento que estés pasando un momento difícil. Tus emociones importan, y no tienes que cargarlas solo.",
 };
+
+const BIOME_KUDOS: Record<BiomeType, string> = {
+  forest: "Tu bosque está floreciendo — cada hábito es una raíz que sostiene el árbol.",
+  desert: "Tu desierto resiste y persiste — la constancia es el agua que hace brotar la vida.",
+  zen: "Tu jardín zen irradia calma — es un reflejo de la armonía que estás construyendo.",
+};
+
+/**
+ * Pure, deterministic kudos fallback — no network, unit-testable.
+ * Returns a non-empty string that references the recipient's name
+ * and varies by biome type.
+ */
+export function buildKudosFallback(recipientName: string, biomeType: BiomeType): string {
+  const base = BIOME_KUDOS[biomeType] ?? BIOME_KUDOS.forest;
+  const name = recipientName.trim();
+  if (name) {
+    return `${name}, ${base.charAt(0).toLowerCase()}${base.slice(1)}`;
+  }
+  return base;
+}
 
 export const stubAgents: Agents = {
   async inferMood(text: string): Promise<MoodInference> {
@@ -120,5 +141,9 @@ export const stubAgents: Agents = {
       return "Eso suena a una exigencia muy dura contigo mismo. Si un amigo te dijera esto, ¿le hablarías con esa severidad? Prueba hablarte con la misma compasión.";
     }
     return "Gracias por compartir ese pensamiento. Veámoslo con distancia: ¿qué evidencia lo apoya y qué evidencia lo contradice? Los hechos suelen ser más amables que el miedo.";
+  },
+
+  async suggestEncouragement(recipientName: string, biomeType: BiomeType): Promise<string> {
+    return buildKudosFallback(recipientName, biomeType);
   },
 };

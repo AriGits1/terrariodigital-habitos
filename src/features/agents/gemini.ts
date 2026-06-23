@@ -11,9 +11,15 @@ import type {
   CoachSuggestion,
   MoodInference,
 } from "./types";
+import type { BiomeType } from "../biome/biome-logic";
 import { stubAgents } from "./stub";
 
 const MODEL = process.env.GEMINI_MODEL ?? "gemini-2.5-flash";
+
+const ENCOURAGEMENT_SYSTEM =
+  "Eres parte de una app cooperativa de hábitos. Escribe un mensaje de aliento " +
+  "breve (1-2 oraciones), cálido y genuino para felicitar a otra persona por cuidar " +
+  "su terrario. Español, sin emojis excesivos, sin signos de exclamación múltiples.";
 
 const COACH_SYSTEM =
   "Eres el Coach de Productividad de una app de hábitos. Tu tono es directo, " +
@@ -168,6 +174,23 @@ export const geminiAgents: Agents = {
     } catch (err) {
       console.error("[gemini.reframe] error:", err);
       return stubAgents.reframe(thought);
+    }
+  },
+
+  async suggestEncouragement(recipientName: string, biomeType: BiomeType): Promise<string> {
+    try {
+      const res = await client().models.generateContent({
+        model: MODEL,
+        contents: `Felicita a ${recipientName} por el progreso de su bioma tipo "${biomeType}".`,
+        config: { systemInstruction: ENCOURAGEMENT_SYSTEM, temperature: 0.8 },
+      });
+      return res.text ?? stubAgents.suggestEncouragement(recipientName, biomeType);
+    } catch (err) {
+      console.error("[gemini.suggestEncouragement] error:", err);
+      if (isRateLimited(err)) {
+        return "El límite de la API está al tope; escribe tu mensaje a mano por ahora.";
+      }
+      return stubAgents.suggestEncouragement(recipientName, biomeType);
     }
   },
 };
