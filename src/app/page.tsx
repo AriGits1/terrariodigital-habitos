@@ -37,8 +37,8 @@ export default async function Home(props: {
   const biome = profile.biome;
 
   const type = (biome?.type ?? "forest") as BiomeType;
-  const growth = biome?.growth ?? 20;
-  const health = biome?.health ?? 80;
+  const growth = biome?.growth ?? 5;
+  const health = biome?.health ?? 5;
 
   // Parallel reads: habit query and adaptive home data do not depend on each other.
   const [habits, homeData, habitSuggestions] = await Promise.all([

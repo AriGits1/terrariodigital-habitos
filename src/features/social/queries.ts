@@ -7,8 +7,8 @@ export interface CohortMember {
   id: string;
   name: string;
   biomeType: BiomeType;
-  growth: number;  // BiomeState.growth ?? 20
-  health: number;  // BiomeState.health ?? 80
+  growth: number;  // BiomeState.growth ?? 5
+  health: number;  // BiomeState.health ?? 5
   streak: number;  // currentStreak over getVitalsData
 }
 
@@ -54,8 +54,8 @@ export async function listCohort(viewerId: string): Promise<CohortMember[]> {
       id: m.id,
       name: m.name,
       biomeType: m.biomeType as BiomeType,
-      growth: m.biome?.growth ?? 20,
-      health: m.biome?.health ?? 80,
+      growth: m.biome?.growth ?? 5,
+      health: m.biome?.health ?? 5,
       streak,
     });
   }
@@ -80,8 +80,8 @@ export async function getVisitData(targetProfileId: string): Promise<VisitData |
   return {
     name: profile.name,
     biomeType: profile.biomeType as BiomeType,
-    growth: profile.biome?.growth ?? 20,
-    health: profile.biome?.health ?? 80,
+    growth: profile.biome?.growth ?? 5,
+    health: profile.biome?.health ?? 5,
     habits,
   };
 }
