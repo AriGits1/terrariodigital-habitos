@@ -97,7 +97,7 @@ export async function completeOnboarding(
   // Seed an initial BiomeState so the 3D scene has data from day 1.
   await prisma.biomeState.upsert({
     where: { profileId: profile.id },
-    create: { profileId: profile.id, type: biomeType, growth: 5, health: 80 },
+    create: { profileId: profile.id, type: biomeType, growth: 5, health: 5 },
     update: { type: biomeType },
   });
 
