@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { loginAction } from "./actions";
+import PasswordInputWithToggle from "./PasswordInputWithToggle";
 
 type FormState = { error: string } | undefined;
 
@@ -38,15 +39,13 @@ export default function LoginForm() {
         >
           Password
         </label>
-        <input
-          id="password"
-          name="password"
-          type="password"
-          required
-          autoComplete="current-password"
-          className="rounded-xl bg-white/10 px-4 py-2 text-white placeholder-white/40 outline-none ring-1 ring-white/20 focus:ring-emerald-400"
-          placeholder="••••••••"
-        />
+        <PasswordInputWithToggle
+  		 id="password"
+  		 name="password"
+ 		 required
+  		 autoComplete="current-password"
+  		 placeholder="••••••••"
+	   />
       </div>
 
       {state?.error && (
