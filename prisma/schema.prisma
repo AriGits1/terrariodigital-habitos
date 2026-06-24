@@ -41,6 +41,8 @@ model Profile {
   /// Opt-in: when true, this profile is visible in the cohort and its terrarium is visitable.
   shareTerrarium Boolean @default(false)
   seeds          Int      @default(0)
+  currentStreak  Int      @default(0)
+  lastActiveDate DateTime?
 
   habits       Habit[]
   moodEntries  MoodEntry[]
@@ -50,6 +52,7 @@ model Profile {
   adaptation   AdaptationState?
   authSessions Session[]
   decorations  BiomeDecoration[]
+  subscriptions PushSubscription[]
 
   sentEncouragements     Encouragement[] @relation("EncouragementFrom")
   receivedEncouragements Encouragement[] @relation("EncouragementTo")
@@ -226,6 +229,20 @@ model BiomeDecoration {
   type      String
   x         Float
   z         Float
+  createdAt DateTime @default(now())
+
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+}
+
+/// Web Push Notification subscriptions.
+model PushSubscription {
+  id        String   @id @default(cuid())
+  profileId String
+  endpoint  String
+  p256dh    String
+  auth      String
   createdAt DateTime @default(now())
 
   profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)

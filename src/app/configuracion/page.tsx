@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireProfile } from "@/features/auth/guards";
 import { logoutAction } from "@/features/auth/actions";
 import SettingsForm from "@/features/settings/SettingsForm";
+import PushNotificationToggle from "@/features/settings/PushNotificationToggle";
 import type { BiomeType } from "@/features/biome/biome-logic";
 
 export default async function ConfiguracionPage() {
@@ -39,6 +40,8 @@ export default async function ConfiguracionPage() {
             shareTerrarium: profile.shareTerrarium,
           }}
         />
+
+        <PushNotificationToggle vapidPublicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ""} />
       </div>
     </main>
   );

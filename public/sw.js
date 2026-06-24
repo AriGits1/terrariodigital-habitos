@@ -124,3 +124,41 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 });
+
+// ── Web Push Notifications ──────────────────────────────────────────────────
+self.addEventListener("push", (event) => {
+  const data = event.data ? event.data.json() : { title: "Terrario Digital", body: "Revisa tus hábitos!" };
+  
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: "/icon-192.png",
+      badge: "/icon-192.png",
+      vibrate: [200, 100, 200],
+      data: {
+        url: "/", 
+      },
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const urlToOpen = event.notification.data?.url || "/";
+
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((windowClients) => {
+      // Si la app ya está abierta, enfocamos esa pestaña
+      for (let i = 0; i < windowClients.length; i++) {
+        const client = windowClients[i];
+        if (client.url.includes(self.location.origin) && "focus" in client) {
+          return client.focus();
+        }
+      }
+      // Si no, abrimos una nueva ventana
+      if (clients.openWindow) {
+        return clients.openWindow(urlToOpen);
+      }
+    })
+  );
+});

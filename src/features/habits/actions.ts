@@ -42,6 +42,11 @@ export async function toggleHabitToday(habitId: string): Promise<void> {
     where: { habitId_date: { habitId, date: today } },
   });
 
+  const profileDetails = await prisma.profile.findUnique({
+    where: { id: profile.id },
+    select: { currentStreak: true, lastActiveDate: true },
+  });
+
   const seedsDelta = (habit.weight ?? 1) * 10;
 
   if (existing) {
@@ -69,12 +74,33 @@ export async function toggleHabitToday(habitId: string): Promise<void> {
     await prisma.habitLog.create({
       data: { habitId, date: today, completed: true },
     });
+
+    let newStreak = profileDetails?.currentStreak ?? 0;
+    const lastActive = profileDetails?.lastActiveDate;
+
+    if (lastActive) {
+      const yesterday = dayAt(1);
+      const diffTime = today.getTime() - lastActive.getTime();
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 1) {
+        newStreak += 1;
+      } else if (diffDays > 1) {
+        newStreak = 1;
+      }
+      // If diffDays === 0, streak remains the same
+    } else {
+      newStreak = 1;
+    }
+
     await prisma.profile.update({
       where: { id: profile.id },
       data: {
         seeds: {
           increment: seedsDelta,
         },
+        currentStreak: newStreak,
+        lastActiveDate: today,
       },
     });
   }

@@ -41,11 +41,14 @@ móvil (con ícono propio y pantalla completa). Cada bioma tiene su propia flora
 
 | Módulo | Cómo se materializa |
 |---|---|
-| **Gamificación** | Completar hábitos hace crecer/sanar el bioma; abandonarlos lo degrada |
-| **Personalización continua** | El tipo de bioma se adapta al promedio emocional inferido del diario |
-| **Ayuda contextual** | El Coach sugiere acciones según tu estado real de hábitos |
+| **Gamificación Extendida** | Bioma vivo que decae sin actividad. Mecánica de **Rachas (Streaks) 🔥**, y una **Tienda de Semillas 🌱** para comprar y posicionar decoraciones interactivamente en el entorno 3D. |
+| **Personalización continua** | El tipo de bioma se adapta al promedio emocional inferido del diario. **Iluminación dinámica** que sigue el ciclo día/noche del usuario real. |
+| **Ayuda contextual** | El Coach (IA) sugiere acciones basadas en el historial. Soporte de **Web Push Notifications 🔔** para recordatorios (Service Worker). |
 
-> Extra: retroalimentación **háptica** (Vibration API) en el módulo de mindfulness.
+> **Extras tecnológicos:** 
+> - Retroalimentación **háptica** (Vibration API) en el módulo de mindfulness.
+> - **Soporte Offline PWA**: Cacheo agresivo de assets 3D permitiendo uso sin red.
+> - **Panel de Administración (Cheat Tools)**: Inyección de semillas, manipulación de rachas y envío manual de notificaciones Push.
 
 ---
 
@@ -136,16 +139,19 @@ aplicación"**. Detalle en la [Guía del equipo](docs/GUIA-EQUIPO.md).
 
 ##  Pantallas
 
-| Ruta | Pantalla | Caso de uso |
+| Ruta / UI | Pantalla / Componente | Caso de uso |
 |---|---|---|
 | `/onboarding` | Bienvenida + elección de bioma | UC-05 |
-| `/` | Bioma 3D + panel de hábitos | UC-03 |
-| `/diario` | Diario matutino (voz/texto/cartas) | UC-01 |
-| `/coach` | Coach de Productividad | UC-02 |
-| `/analiticas` | Analíticas semanales | UC-06 |
-| `/mindfulness` | Mindfulness con guía háptica | UC-04 |
-| `/reframe` | Reencuadre cognitivo | UC-02 |
-| `/configuracion` | Perfil y preferencias | RF-17 |
+| `/` | Bioma 3D interactivo + panel de hábitos + HUD de Estadísticas | UC-03 |
+| `/diario` | Diario matutino multimodal (voz/texto/cartas) | UC-01 |
+| *Modal Embebido* | **Coach de Productividad**: (Aparece sobre `/` al hacer clic) | UC-02 |
+| *Card Embebido* | **Reencuadre Cognitivo**: (Integrado naturalmente en `/diario`) | UC-02 |
+| `/analiticas` | Analíticas semanales y visualización de progreso | UC-06 |
+| `/mindfulness` | Sesión de mindfulness guiada con respuesta háptica | UC-04 |
+| `/configuracion` | Perfil, ajustes de bioma y activación Web Push | RF-17 |
+| `/admin` | Panel de gestión y *Cheat Tools* para profesores/evaluadores | RF-Admin |
+
+> **Nota de Diseño (HCI):** Funciones como el *Coach* y el *Reencuadre* no fuerzan una recarga de página; se renderizan in-context como Modales y Tarjetas para evitar romper la inmersión del usuario, mejorando la usabilidad.
 
 ---
 
