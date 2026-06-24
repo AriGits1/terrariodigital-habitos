@@ -172,8 +172,6 @@ export async function applyDifficultySuggestion(
   habitId: string,
   accept: boolean,
 ): Promise<void> {
-  if (!accept) return; // rejection is a no-op
-
   const profile = await requireProfile();
 
   const habit = await prisma.habit.findUnique({
@@ -181,6 +179,33 @@ export async function applyDifficultySuggestion(
     select: { profileId: true, weight: true },
   });
   if (!habit || habit.profileId !== profile.id) return;
+
+  if (!accept) {
+    // Si el usuario ignora la sugerencia, reseteamos el EWMA a un valor neutral (0.6)
+    // para que la sugerencia desaparezca y no vuelva a molestar hasta que haya más datos.
+    const state = await prisma.adaptationState.findUnique({
+      where: { profileId: profile.id },
+      select: { habitEwma: true },
+    });
+    
+    if (state) {
+      try {
+        const parsed = JSON.parse(state.habitEwma);
+        if (parsed && typeof parsed === "object") {
+          parsed[habitId] = 0.6; // zona muerta (hold)
+          await prisma.adaptationState.update({
+            where: { profileId: profile.id },
+            data: { habitEwma: JSON.stringify(parsed) }
+          });
+        }
+      } catch {
+        // ignore
+      }
+    }
+    revalidatePath("/");
+    revalidatePath("/habitos");
+    return;
+  }
 
   // Read AdaptationState to get the current habit EWMA
   const state = await prisma.adaptationState.findUnique({

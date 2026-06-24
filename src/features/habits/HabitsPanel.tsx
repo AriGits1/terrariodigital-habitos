@@ -21,7 +21,8 @@ export interface HabitView {
 type OptimisticAction =
   | { kind: "toggle"; id: string }
   | { kind: "add"; title: string; weight: number }
-  | { kind: "archive"; id: string };
+  | { kind: "archive"; id: string }
+  | { kind: "dismiss_suggestion"; id: string };
 
 function reduce(state: HabitView[], action: OptimisticAction): HabitView[] {
   switch (action.kind) {
@@ -42,6 +43,10 @@ function reduce(state: HabitView[], action: OptimisticAction): HabitView[] {
       ];
     case "archive":
       return state.filter((h) => h.id !== action.id);
+    case "dismiss_suggestion":
+      return state.map((h) =>
+        h.id === action.id ? { ...h, suggestion: undefined } : h,
+      );
   }
 }
 
@@ -137,6 +142,11 @@ export default function HabitsPanel({
                 suggestion={h.suggestion}
                 reason={h.suggestionReason ?? null}
                 startTransition={startTransition}
+                onDismiss={() => {
+                  startTransition(() => {
+                    applyOptimistic({ kind: "dismiss_suggestion", id: h.id });
+                  });
+                }}
               />
             )}
           </li>
@@ -207,11 +217,13 @@ function SuggestionChip({
   suggestion,
   reason,
   startTransition,
+  onDismiss,
 }: {
   habitId: string;
   suggestion: "level-up" | "ease";
   reason: string | null;
   startTransition: TransitionStartFunction;
+  onDismiss: () => void;
 }) {
   const label = suggestion === "level-up" ? "Subir dificultad" : "Bajar dificultad";
 
@@ -222,6 +234,7 @@ function SuggestionChip({
   }
 
   function handleReject() {
+    onDismiss();
     startTransition(async () => {
       await applyDifficultySuggestion(habitId, false);
     });
