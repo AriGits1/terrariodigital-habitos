@@ -11,6 +11,11 @@ export async function requireProfile(): Promise<ProfileWithBiome> {
   if (!profile) {
     redirect("/login");
   }
+  // New users who haven't completed onboarding are sent to the welcome flow.
+  // We exclude the /onboarding path itself to avoid an infinite redirect loop.
+  if (!profile.onboarded) {
+    redirect("/onboarding");
+  }
   return profile;
 }
 

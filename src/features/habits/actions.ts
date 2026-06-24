@@ -33,7 +33,7 @@ export async function toggleHabitToday(habitId: string): Promise<void> {
 
   const habit = await prisma.habit.findUnique({
     where: { id: habitId },
-    select: { profileId: true },
+    select: { profileId: true, weight: true },
   });
   if (!habit || habit.profileId !== profile.id) return;
 
@@ -42,11 +42,40 @@ export async function toggleHabitToday(habitId: string): Promise<void> {
     where: { habitId_date: { habitId, date: today } },
   });
 
+  const seedsDelta = (habit.weight ?? 1) * 10;
+
   if (existing) {
     await prisma.habitLog.delete({ where: { id: existing.id } });
+    await prisma.profile.update({
+      where: { id: profile.id },
+      data: {
+        seeds: {
+          decrement: seedsDelta,
+        },
+      },
+    });
+    // Ensure seeds never drop below 0
+    const updated = await prisma.profile.findUnique({
+      where: { id: profile.id },
+      select: { seeds: true },
+    });
+    if (updated && updated.seeds < 0) {
+      await prisma.profile.update({
+        where: { id: profile.id },
+        data: { seeds: 0 },
+      });
+    }
   } else {
     await prisma.habitLog.create({
       data: { habitId, date: today, completed: true },
+    });
+    await prisma.profile.update({
+      where: { id: profile.id },
+      data: {
+        seeds: {
+          increment: seedsDelta,
+        },
+      },
     });
   }
 

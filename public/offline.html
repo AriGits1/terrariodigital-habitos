@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sin conexión — Terrario Digital</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      padding: 2rem;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #0f3d2e 0%, #18181b 60%, #134e3a 100%);
+      color: #fff;
+      text-align: center;
+    }
+
+    .icon {
+      font-size: 5rem;
+      line-height: 1;
+      filter: drop-shadow(0 0 24px rgba(52,211,153,0.35));
+      animation: sway 4s ease-in-out infinite;
+    }
+
+    @keyframes sway {
+      0%, 100% { transform: rotate(-4deg); }
+      50%       { transform: rotate(4deg); }
+    }
+
+    h1 {
+      font-size: clamp(1.5rem, 5vw, 2rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    p {
+      max-width: 26ch;
+      font-size: 1rem;
+      line-height: 1.6;
+      color: rgba(255,255,255,0.6);
+    }
+
+    .badge {
+      display: inline-block;
+      background: rgba(52,211,153,0.15);
+      border: 1px solid rgba(52,211,153,0.3);
+      color: #6ee7b7;
+      border-radius: 9999px;
+      padding: 0.3rem 1rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    button {
+      margin-top: 0.5rem;
+      padding: 0.85rem 2.5rem;
+      border-radius: 9999px;
+      border: none;
+      background: #10b981;
+      color: #000;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 0 24px rgba(16,185,129,0.35);
+      transition: background 0.2s, transform 0.15s;
+    }
+    button:hover { background: #34d399; transform: scale(1.04); }
+    button:active { transform: scale(0.97); }
+  </style>
+</head>
+<body>
+  <div class="icon">🌿</div>
+
+  <span class="badge">Sin conexión</span>
+
+  <h1>Tu terrario<br />sigue aquí</h1>
+
+  <p>
+    No hay conexión a internet ahora mismo.
+    Vuelve cuando tengas señal para seguir
+    cuidando tus hábitos.
+  </p>
+
+  <button onclick="location.reload()">
+    Reintentar
+  </button>
+</body>
+</html>

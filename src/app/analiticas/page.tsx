@@ -8,14 +8,12 @@ import {
   weeklyScores,
 } from "@/features/analytics/analytics";
 
-import { Smile, Heart, Meh, AlertCircle, Frown } from "lucide-react";
-
-const MOOD_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  motivated: Smile,
-  calm: Heart,
-  neutral: Meh,
-  anxious: AlertCircle,
-  sad: Frown,
+const MOOD_EMOJIS: Record<string, string> = {
+  motivated: "🤩",
+  calm: "😌",
+  neutral: "😐",
+  anxious: "😰",
+  sad: "😢",
 };
 
 export default async function AnaliticasPage() {
@@ -54,24 +52,36 @@ export default async function AnaliticasPage() {
           <h2 className="mb-4 text-sm font-semibold text-white/70">
             Cumplimiento diario (últimos 7 días)
           </h2>
-          <div className="flex h-40 items-end justify-between gap-2">
-            {week.map((d, i) => (
-              <div key={i} className="flex flex-1 flex-col items-center gap-2">
-                <span className="text-xs font-semibold text-emerald-400">
-                  {d.completedCount > 0 ? d.completedCount : ""}
-                </span>
-                <div className="flex h-32 w-full items-end">
-                  <div
-                    className="w-full rounded-t bg-emerald-400 transition-all"
-                    style={{ height: `${Math.max(4, d.score * 100)}%` }}
-                    title={`${d.completedCount} completado(s)`}
-                  />
-                </div>
-                <span className="text-xs capitalize text-white/50">
-                  {d.label}
-                </span>
-              </div>
-            ))}
+          <div className="flex h-40 gap-4">
+            {/* Eje Y */}
+            <div className="flex flex-col justify-between items-center pb-6 text-xs text-white/50 w-6">
+              <span>{Math.max(habits.length, Math.max(...week.map(w => w.completedCount)), 1)}</span>
+              <span className="-rotate-90 text-[10px] uppercase tracking-widest text-white/40">Hábitos</span>
+              <span>0</span>
+            </div>
+            
+            {/* Barras */}
+            <div className="flex flex-1 items-end justify-between gap-2">
+              {week.map((d, i) => {
+                const chartMax = Math.max(habits.length, Math.max(...week.map(w => w.completedCount)), 1);
+                const heightPercentage = Math.max(4, (d.completedCount / chartMax) * 100);
+
+                return (
+                  <div key={i} className="flex flex-1 flex-col items-center gap-2 h-full justify-end">
+                    <div className="flex h-full w-full items-end">
+                      <div
+                        className="w-full rounded-t bg-emerald-400 transition-all"
+                        style={{ height: `${heightPercentage}%` }}
+                        title={`${d.completedCount} completado(s)`}
+                      />
+                    </div>
+                    <span className="text-xs capitalize text-white/50">
+                      {d.label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </section>
 
@@ -86,7 +96,7 @@ export default async function AnaliticasPage() {
                 <div className="mb-1 flex justify-between text-sm">
                   <span>{h.title}</span>
                   <span className="text-white/50">
-                    {h.done}/{h.total}
+                    {h.done}/{h.total} días cumplidos
                   </span>
                 </div>
                 <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
@@ -112,11 +122,8 @@ export default async function AnaliticasPage() {
             <div className="flex items-end justify-between gap-2">
               {moods.map((m, i) => (
                 <div key={i} className="flex flex-col items-center gap-1">
-                  <span className="text-emerald-400">
-                    {(() => {
-                      const Icon = MOOD_ICONS[m.mood ?? "neutral"] ?? Meh;
-                      return <Icon className="h-6 w-6" />;
-                    })()}
+                  <span className="text-2xl">
+                    {MOOD_EMOJIS[m.mood ?? "neutral"] ?? "😐"}
                   </span>
                   <span className="text-xs capitalize text-white/40">
                     {new Date(m.date).toLocaleDateString("es-PE", {

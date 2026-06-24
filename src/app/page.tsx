@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Mic, BarChart2, Wind, Settings, Shield, Users } from "lucide-react";
+import { Mic, BarChart2, Wind, Settings, Shield, Users, Store } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 import type { BiomeType } from "@/features/biome/biome-logic";
@@ -11,6 +11,8 @@ import { getAdaptiveHomeData } from "@/features/adaptation/state";
 import type { ModuleKey } from "@/features/adaptation/engine";
 
 import BiomeSceneWrapper from "@/features/biome/BiomeSceneWrapper";
+import { maybeDecayBiome } from "@/features/habits/biome-decay";
+import { prisma } from "@/lib/db";
 
 const BIOME_LABELS: Record<BiomeType, string> = {
   forest: "Bosque",
@@ -30,6 +32,7 @@ export default async function Home(props: {
 }) {
   const searchParams = props.searchParams ? await props.searchParams : {};
   const showCoach = searchParams.coach === "true";
+  const showShop = searchParams.shop === "true";
   const habitId = typeof searchParams.habitId === "string" ? searchParams.habitId : undefined;
   const habitTitle = typeof searchParams.habitTitle === "string" ? decodeURIComponent(searchParams.habitTitle) : undefined;
 
@@ -37,20 +40,32 @@ export default async function Home(props: {
   const biome = profile.biome;
 
   const type = (biome?.type ?? "forest") as BiomeType;
-  const growth = biome?.growth ?? 5;
-  const health = biome?.health ?? 5;
 
-  // Parallel reads: habit query and adaptive home data do not depend on each other.
-  const [habits, homeData, habitSuggestions] = await Promise.all([
+  // Parallel reads: habit query, adaptive home data and biome decay are independent.
+  // maybeDecayBiome returns the up-to-date growth/health (writing to DB only when
+  // the cached snapshot is from a previous calendar day).
+  const [habits, homeData, habitSuggestions, freshVitals, decorations, dbProfile] = await Promise.all([
     getHabitsWithTodayStatus(profile.id),
     getAdaptiveHomeData(profile.id),
     getHabitSuggestions(profile.id),
+    maybeDecayBiome(profile.id, biome ?? null),
+    prisma.biomeDecoration.findMany({
+      where: { profileId: profile.id },
+    }),
+    prisma.profile.findUnique({
+      where: { id: profile.id },
+      select: { seeds: true },
+    }),
   ]);
+
+  // Use decay-corrected vitals — these reflect missed days even if the user
+  // hasn't interacted with the app since the last snapshot was written.
+  const { growth, health } = freshVitals;
 
   const { moduleOrder, lowEngagement, adaptationReason } = homeData;
 
   // Merge suggestions into habits for HabitsPanel
-  const habitsWithSuggestions = habits.map((h) => {
+  const habitsWithSuggestions = habits.map((h: any) => {
     const s = habitSuggestions.get(h.id);
     return s ? { ...h, suggestion: s.suggestion, suggestionReason: s.reason } : h;
   });
@@ -59,7 +74,14 @@ export default async function Home(props: {
     <main className="relative h-[100dvh] w-screen overflow-hidden">
       {/* The living ecosystem fills the screen. */}
       <div className="absolute inset-0">
-        <BiomeSceneWrapper type={type} habits={habits} />
+        <BiomeSceneWrapper
+          type={type}
+          habits={habits}
+          isAdmin={profile.role === "admin"}
+          decorations={decorations}
+          seeds={dbProfile?.seeds ?? 0}
+          showShop={showShop}
+        />
       </div>
 
       {/* Gradient scrims so the overlaid UI stays legible over the biome. */}
@@ -78,7 +100,7 @@ export default async function Home(props: {
         </div>
 
         <nav className="pointer-events-auto flex flex-wrap gap-2">
-          {moduleOrder.map((k) => {
+          {moduleOrder.map((k: ModuleKey) => {
             const item = NAV[k];
             const hasLowEngagement = lowEngagement.has(k);
             return (
@@ -99,6 +121,19 @@ export default async function Home(props: {
               </Link>
             );
           })}
+
+          <Link
+            href={showShop ? "?" : "?shop=true"}
+            scroll={false}
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium text-white backdrop-blur-sm transition ${
+              showShop
+                ? "bg-emerald-500 hover:bg-emerald-600 text-black font-semibold"
+                : "bg-white/15 hover:bg-white/25"
+            } md:px-4 md:py-1.5 md:text-sm`}
+          >
+            <Store className="h-3.5 w-3.5 md:h-4 md:w-4" />
+            Tienda
+          </Link>
 
           {/* Admin link: visible only to admins. Authorization is still
               enforced server-side by requireAdmin() — this is convenience,

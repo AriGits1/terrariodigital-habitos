@@ -41,7 +41,7 @@ export async function loginAction(
   }
 
   await createSession(profile.id);
-  redirect("/");
+  redirect(profile.onboarded ? "/" : "/onboarding");
 }
 
 /**

@@ -40,6 +40,7 @@ model Profile {
 
   /// Opt-in: when true, this profile is visible in the cohort and its terrarium is visitable.
   shareTerrarium Boolean @default(false)
+  seeds          Int      @default(0)
 
   habits       Habit[]
   moodEntries  MoodEntry[]
@@ -48,6 +49,7 @@ model Profile {
   biome        BiomeState?
   adaptation   AdaptationState?
   authSessions Session[]
+  decorations  BiomeDecoration[]
 
   sentEncouragements     Encouragement[] @relation("EncouragementFrom")
   receivedEncouragements Encouragement[] @relation("EncouragementTo")
@@ -215,4 +217,18 @@ model Encouragement {
   /// Inbox query: recipient's unread-first feed.
   @@index([toProfileId, read])
   @@index([fromProfileId])
+}
+
+/// User-placed visual decoration elements.
+model BiomeDecoration {
+  id        String   @id @default(cuid())
+  profileId String
+  type      String
+  x         Float
+  z         Float
+  createdAt DateTime @default(now())
+
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
 }
