@@ -54,7 +54,7 @@ export default async function Home(props: {
     }),
     prisma.profile.findUnique({
       where: { id: profile.id },
-      select: { seeds: true },
+      select: { seeds: true, currentStreak: true },
     }),
   ]);
 
@@ -173,6 +173,7 @@ export default async function Home(props: {
           <StatCard label="Bioma" value={BIOME_LABELS[type]} />
           <StatCard label="Crecimiento" value={`${growth}%`} />
           <StatCard label="Salud" value={`${health}%`} />
+          <StatCard label="Racha" value={`${dbProfile?.currentStreak ?? 0} 🔥`} />
         </div>
       </header>
 

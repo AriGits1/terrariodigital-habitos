@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireAdmin } from "@/features/auth/guards";
 import { createUserAction } from "@/features/auth/actions";
 import { prisma } from "@/lib/db";
+import AdminCheatTools from "./AdminCheatTools";
 
 export default async function AdminPage(props: {
   searchParams?: Promise<{ success?: string; error?: string }>;
@@ -13,7 +14,7 @@ export default async function AdminPage(props: {
   const errorMsg = searchParams.error;
 
   const users = await prisma.profile.findMany({
-    select: { id: true, name: true, email: true, role: true, createdAt: true },
+    select: { id: true, name: true, email: true, role: true, createdAt: true, seeds: true, currentStreak: true },
     orderBy: { createdAt: "asc" },
   });
 
@@ -172,6 +173,9 @@ export default async function AdminPage(props: {
             </table>
           </div>
         </section>
+
+        {/* Cheat Tools */}
+        <AdminCheatTools users={users} />
       </div>
     </main>
   );
