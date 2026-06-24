@@ -1069,6 +1069,12 @@ export default function BiomeScene({
               </div>
             </div>
 
+            <div className="px-4 pt-3">
+              <p className="text-sm text-white/60">
+                ¡Completa tus hábitos para conseguir más semillas!
+              </p>
+            </div>
+
             <div className="grid grid-cols-2 gap-3 p-4 max-h-[60vh] overflow-y-auto">
               {DECORATIONS_LIST.map((item) => {
                 const canAfford = seeds >= item.cost;
