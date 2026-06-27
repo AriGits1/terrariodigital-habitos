@@ -1,0 +1,24 @@
+# Local Postgres for Terrario Digital dev.
+# Brought up with: docker compose up -d
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: terrario-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: terrario
+      POSTGRES_PASSWORD: terrario
+      POSTGRES_DB: terrario
+    # Host port 5433 to avoid clashing with a native Postgres on 5432.
+    ports:
+      - "5433:5432"
+    volumes:
+      - terrario_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U terrario -d terrario"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  terrario_pgdata:

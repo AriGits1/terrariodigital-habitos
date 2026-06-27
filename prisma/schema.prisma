@@ -1,12 +1,11 @@
 // Terrario Digital — Prisma schema
 // CC451 Interaccion Humano Computador — PC3
 //
-// Dev database: SQLite (zero-install, file-based).
-// Production target: PostgreSQL — swapping is a one-line change in the
-// datasource `provider` plus DATABASE_URL. Models stay identical.
+// Database: PostgreSQL (dev and production). Local dev runs Postgres via
+// docker-compose.yml; the connection URL comes from DATABASE_URL.
 //
-// SQLite note: Prisma does not support native enums on SQLite, so status
-// fields are modeled as String with documented allowed values.
+// Note: status fields are modeled as String with documented allowed values
+// rather than native enums, kept for portability and simpler migrations.
 
 generator client {
   provider = "prisma-client"
@@ -14,9 +13,8 @@ generator client {
 }
 
 datasource db {
-  // Prisma 7: the connection URL lives in prisma.config.ts, not here.
-  // For production, switch this provider to "postgresql".
-  provider = "sqlite"
+  // Prisma 7: the connection URL lives in prisma.config.ts (read from env).
+  provider = "postgresql"
 }
 
 /// The single local user profile for the MVP. Drives biome personalization.
