@@ -1,10 +1,14 @@
 import { PrismaClient } from "@/generated/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-// Prisma 7 requires a driver adapter at runtime. Local dev uses better-sqlite3
-// against the file-based database. For production, swap this adapter for the
-// PostgreSQL one and read the URL from process.env.
-const adapter = new PrismaBetterSqlite3({ url: "file:./prisma/dev.db" });
+// Prisma 7 requires a driver adapter at runtime. The database is PostgreSQL;
+// the connection string comes from DATABASE_URL (local dev runs Postgres via
+// docker-compose.yml).
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  throw new Error("DATABASE_URL is not set — cannot connect to PostgreSQL.");
+}
+const adapter = new PrismaPg({ connectionString });
 
 // Reuse a single PrismaClient across hot reloads in development so we don't
 // exhaust connections (Next.js re-evaluates modules on every change).

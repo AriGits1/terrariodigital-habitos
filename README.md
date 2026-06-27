@@ -60,19 +60,20 @@ móvil (con ícono propio y pantalla completa). Cada bioma tiene su propia flora
 | Lenguaje | **TypeScript 5** |
 | Estilos | **Tailwind CSS 4** |
 | 3D | **Three.js** + `@react-three/fiber` + `@react-three/drei` |
-| Base de datos | **Prisma 7** ORM + **SQLite** (dev) |
+| Base de datos | **Prisma 7** ORM + **PostgreSQL 17** (dev y prod) |
 | LLM | **Google Gemini** (`@google/genai`, modelo `gemini-2.5-flash`) |
 | Voz | Web Speech API (nativa del navegador) |
 | Háptica | Vibration API (nativa del navegador) |
 
-> **SQLite → PostgreSQL**: el cambio a producción es de una línea (el `provider`
-> del datasource en `prisma/schema.prisma` y la URL en `prisma.config.ts`). Los
-> modelos no cambian.
+> **PostgreSQL en dev y prod**: el dev local levanta Postgres con Docker
+> (`docker-compose.yml`). Prisma 7 usa el driver adapter `@prisma/adapter-pg` y
+> lee la conexión desde `DATABASE_URL`. En producción solo cambia esa URL.
 
 ---
 ### Requisitos
 
 - **Node.js 20+** y **npm**
+- **Docker** + **Docker Compose** (para la base PostgreSQL local)
 - **Git**
 - Un navegador basado en Chromium (Chrome/Edge) para el dictado por voz
 
@@ -83,17 +84,59 @@ npm install
 ```
 
 > `npm install` también genera el cliente de Prisma automáticamente (`postinstall`).
+> Esto funciona sin base de datos: `prisma generate` no necesita conexión.
 
-### 2. Preparar la base de datos
+### 2. Levantar PostgreSQL
 
-SQLite — no hay que instalar ninguna base de datos.
+La base corre en un contenedor Docker definido en `docker-compose.yml`
+(Postgres 17, usuario/clave/base `terrario`). **No instales Postgres a mano.**
 
 ```bash
-npm run db:migrate   # crea la base SQLite y aplica el esquema
+docker compose up -d
+```
+
+> **Puerto 5433 (no 5432).** El contenedor expone Postgres en el host en el
+> puerto **5433** a propósito, para no chocar con un Postgres que ya tengas
+> instalado en tu máquina ocupando el 5432. Si el comando falla por puerto
+> ocupado, revisá qué proceso usa el 5433 o cambialo en `docker-compose.yml`
+> (recordá actualizar también la URL del `.env`).
+
+### 3. Configurar la conexión (`.env`)
+
+Creá un archivo **`.env`** en la raíz con la URL de la base. Este archivo está
+en `.gitignore`, así que cada quien lo crea localmente:
+
+```
+DATABASE_URL="postgresql://terrario:terrario@localhost:5433/terrario?schema=public"
+```
+
+Atajo para crearlo desde la terminal (en la raíz del proyecto):
+
+```bash
+# macOS / Linux / Git Bash
+echo 'DATABASE_URL="postgresql://terrario:terrario@localhost:5433/terrario?schema=public"' > .env
+
+# Windows PowerShell (escribe sin BOM, que rompería el parser de --env-file)
+[System.IO.File]::WriteAllText("$PWD\.env", 'DATABASE_URL="postgresql://terrario:terrario@localhost:5433/terrario?schema=public"' + "`n")
+```
+
+> Si preferís, creá el `.env` a mano en tu editor con esa única línea. Asegurate
+> de guardarlo como **UTF-8 sin BOM**.
+
+### 4. Aplicar el esquema y cargar datos
+
+Con el contenedor arriba y el `.env` creado:
+
+```bash
+npm run db:migrate   # aplica las migraciones al Postgres del contenedor
 npm run db:seed      # carga datos simulados de demostración
 ```
 
-### 3. Configurar la clave de Gemini (opcional pero recomendado)
+> Si `db:migrate` falla con `P1000 Authentication failed`, casi siempre es que
+> `localhost:5432/5433` está pegando contra otro Postgres. Confirmá que el
+> contenedor está sano con `docker compose ps` y que el `.env` apunta al **5433**.
+
+### 5. Configurar la clave de Gemini (opcional pero recomendado)
 
 Creá un archivo **`.env.local`** en la raíz con tu clave:
 
@@ -105,13 +148,18 @@ GEMINI_API_KEY=tu_clave_de_google_ai_studio
 > los tonos. Con clave, pasan a **IA real** sin ningún otro cambio (patrón
 > Strategy en `src/features/agents`).
 
-### 4. Levantar la app
+### 6. Levantar la app
 
 ```bash
 npm run dev
 ```
 
  **http://localhost:3000**.
+
+> **Detener / reiniciar la base:** `docker compose stop` la pausa sin borrar
+> datos; `docker compose down` elimina el contenedor (los datos persisten en el
+> volumen `terrario_pgdata`); `docker compose down -v` borra **también** los
+> datos para empezar de cero.
 
 ### Scripts disponibles
 
