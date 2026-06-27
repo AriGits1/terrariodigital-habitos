@@ -260,6 +260,27 @@ src/
 
 ---
 
+## 🔑 Credenciales de demostración
+
+El seed (`npm run db:seed`) crea **6 perfiles** con hábitos, biomas y ánimos
+distintos para que la cohorte y el río comunitario tengan datos reales. Son
+cuentas de demostración con datos simulados — **no uses estas claves en
+producción**.
+
+| Rol | Email | Contraseña | Bioma | Perfil |
+|---|---|---|---|---|
+| **admin** | `admin@terrario.local` | `changeme` | 🌲 Bosque | Martín — tesis, racha media |
+| usuario | `lucia@terrario.local` | `demo1234` | 🌵 Desierto | Lucía — muy constante, racha 12 |
+| usuario | `diego@terrario.local` | `demo1234` | 🌲 Bosque | Diego — irregular, bioma flojo |
+| usuario | `sofia@terrario.local` | `demo1234` | 🌸 Zen | Sofía — impecable, racha 21 |
+| usuario | `mateo@terrario.local` | `demo1234` | 🌲 Bosque | Mateo — bajó la guardia, racha 0 |
+| usuario | `valentina@terrario.local` | `demo1234` | 🌵 Desierto | Valentina — sólida, racha 9 |
+
+> La contraseña del admin se puede sobreescribir con las variables de entorno
+> `ADMIN_EMAIL` y `ADMIN_PASSWORD` antes de correr el seed.
+
+---
+
 ## 📄 Licencia
 
 Licenciado bajo **MIT**. Ver [LICENSE](LICENSE).
