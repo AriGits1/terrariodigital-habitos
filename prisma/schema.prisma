@@ -41,6 +41,8 @@ model Profile {
   /// Opt-in: when true, this profile is visible in the cohort and its terrarium is visitable.
   shareTerrarium Boolean @default(false)
   seeds          Int      @default(0)
+  /// Water balance: bought with seeds in the Tienda or claimed from community gestures. Feeds the river and waters the biome.
+  water          Int      @default(0)
   currentStreak  Int      @default(0)
   lastActiveDate DateTime?
 
@@ -212,6 +214,8 @@ model Encouragement {
   /// Optional free-text note; null for a bare "water".
   message       String?
   read          Boolean  @default(false)
+  /// For type="water": whether the recipient has claimed the water into their balance. Idempotency guard.
+  claimed       Boolean  @default(false)
   createdAt     DateTime @default(now())
 
   fromProfile Profile @relation("EncouragementFrom", fields: [fromProfileId], references: [id], onDelete: Cascade)

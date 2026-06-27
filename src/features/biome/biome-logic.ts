@@ -6,9 +6,26 @@ export type BiomeType = "forest" | "desert" | "zen";
 
 export const MAX_PLANTS = 24;
 
+/** Radius of the circular terrain. Shared by every vegetation generator. */
+export const TERRAIN_RADIUS = 11;
+
+/**
+ * Ambient ground-cover density. The understory is decoupled from habit logs so
+ * the terrain never looks bare: even a brand-new user gets UNDERSTORY_BASE
+ * plants, scaling up to UNDERSTORY_MAX as `growth` approaches 100.
+ */
+export const UNDERSTORY_BASE = 14;
+export const UNDERSTORY_MAX = 64;
+
 /** Clamp a number into [min, max]. */
 export function clamp(n: number, min = 0, max = 100): number {
   return Math.max(min, Math.min(max, n));
+}
+
+/** How many ambient ground-cover plants to render for a given growth (0-100). */
+export function understoryCount(growth: number): number {
+  const g = clamp(growth) / 100;
+  return Math.round(UNDERSTORY_BASE + (UNDERSTORY_MAX - UNDERSTORY_BASE) * g);
 }
 
 /**
@@ -153,6 +170,70 @@ function findPosition(
   return null;
 }
 
+/** A guaranteed point inside the terrain (used when spacing can't be met). */
+function randomPointIn(
+  rand: () => number,
+  radius: number,
+  innerRadius: number,
+): { x: number; z: number } {
+  const angle = rand() * Math.PI * 2;
+  const dist = innerRadius + Math.sqrt(rand()) * (radius - innerRadius);
+  return { x: Math.cos(angle) * dist, z: Math.sin(angle) * dist };
+}
+
+/** A small deterministic PRNG seeded with `seed`. */
+function makeRand(seed: number): () => number {
+  let s = seed;
+  return () => {
+    s |= 0;
+    s = (s + 0x6d2b79f5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * Ambient ground cover, independent of habit logs. This is what stops the
+ * terrarium from looking empty for users with only a couple of habits: the
+ * floor fills proportionally to `growth`, in grass/bush/small-flower kinds
+ * (never main trees — those stay habit-driven). Deterministic for a given
+ * (growth, health) so the scene is stable across renders.
+ */
+export function generateUnderstory(growth: number, health: number): PlantPlacement[] {
+  const count = understoryCount(growth);
+  const h = clamp(health);
+  const placements: PlantPlacement[] = [];
+  const rand = makeRand(9001 + count);
+
+  const INNER = 0.6;
+  const MIN_DIST = 0.7;
+
+  for (let i = 0; i < count; i++) {
+    const pos =
+      findPosition(rand, TERRAIN_RADIUS, MIN_DIST, INNER, placements, 8) ??
+      randomPointIn(rand, TERRAIN_RADIUS, INNER);
+
+    const r = rand();
+    let kind: VegetationKind = "grass";
+    if (r > 0.85) kind = "bush";
+    else if (r > 0.65) kind = "smallFlower";
+
+    placements.push({
+      id: `under-${i}`,
+      kind,
+      x: pos.x,
+      z: pos.z,
+      scale: 0.35 + rand() * 0.5,
+      lean: (rand() - 0.5) * 0.3,
+      dayIndex: -1,
+      health: h,
+    });
+  }
+
+  return placements;
+}
+
 /**
  * Free-placement plant layout based on the full week of habit history.
  * Plants are scattered randomly across the entire circular terrain with
@@ -174,7 +255,6 @@ export function generateBiomeVegetation(
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 
-  const TERRAIN_RADIUS = 11;   // larger terrain so vegetation fits comfortably
   const INNER_RADIUS = 1.2;    // keep a small clear zone at center
   const MAIN_MIN_DIST = 2.8;   // min distance between main trees/plants
   const DECO_MIN_DIST = 0.9;   // min distance between secondary flora
