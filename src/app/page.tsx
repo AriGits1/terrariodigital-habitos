@@ -54,7 +54,7 @@ export default async function Home(props: {
     }),
     prisma.profile.findUnique({
       where: { id: profile.id },
-      select: { seeds: true, currentStreak: true },
+      select: { seeds: true, currentStreak: true, water: true },
     }),
   ]);
 
@@ -80,6 +80,9 @@ export default async function Home(props: {
           isAdmin={profile.role === "admin"}
           decorations={decorations}
           seeds={dbProfile?.seeds ?? 0}
+          waterBalance={dbProfile?.water ?? 0}
+          growth={growth}
+          health={health}
           showShop={showShop}
         />
       </div>

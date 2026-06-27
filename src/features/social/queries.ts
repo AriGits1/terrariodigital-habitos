@@ -25,6 +25,7 @@ export interface InboxItem {
   type: "water" | "kudos";
   message: string | null;
   read: boolean;
+  claimed: boolean;   // water gestures: already credited to balance?
   createdAt: string;  // ISO
   fromName: string;   // joined via fromProfile.select.name
 }
@@ -97,6 +98,7 @@ export async function getInbox(profileId: string): Promise<Inbox> {
         type: true,
         message: true,
         read: true,
+        claimed: true,
         createdAt: true,
         fromProfile: { select: { name: true } },
       },
@@ -109,6 +111,7 @@ export async function getInbox(profileId: string): Promise<Inbox> {
     type: r.type as "water" | "kudos",
     message: r.message,
     read: r.read,
+    claimed: r.claimed,
     createdAt: r.createdAt.toISOString(),
     fromName: r.fromProfile.name,
   }));
