@@ -15,6 +15,9 @@ export default function BiomeSceneWrapper({
   isAdmin = false,
   decorations = [],
   seeds = 0,
+  waterBalance = 0,
+  growth = 20,
+  health = 80,
   showShop = false,
 }: {
   type: BiomeType;
@@ -23,6 +26,9 @@ export default function BiomeSceneWrapper({
   isAdmin?: boolean;
   decorations?: BiomeDecoration[];
   seeds?: number;
+  waterBalance?: number;
+  growth?: number;
+  health?: number;
   showShop?: boolean;
 }) {
   return (
@@ -33,6 +39,9 @@ export default function BiomeSceneWrapper({
       isAdmin={isAdmin}
       decorations={decorations}
       seeds={seeds}
+      waterBalance={waterBalance}
+      growth={growth}
+      health={health}
       showShop={showShop}
     />
   );

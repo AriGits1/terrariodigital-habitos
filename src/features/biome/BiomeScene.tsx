@@ -3,8 +3,8 @@
 import { useMemo, useRef, useEffect, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
-import type { Group, DirectionalLight as DL, HemisphereLight as HL, AmbientLight as AL } from "three";
-import { Color } from "three";
+import type { Group, DirectionalLight as DL, HemisphereLight as HL, AmbientLight as AL, MeshStandardMaterial } from "three";
+import { Color, DataTexture, RepeatWrapping, RGBAFormat } from "three";
 import { useRouter } from "next/navigation";
 import {
   type BiomeType,
@@ -13,16 +13,20 @@ import {
   groundColor,
   plantKind,
   generateBiomeVegetation,
+  generateUnderstory,
+  TERRAIN_RADIUS,
   skyColor,
   vitality,
   type PlantPlacement,
 } from "./biome-logic";
+import { caudal, WATER_PACKS } from "./water-logic";
+import { buyWater, waterTheBiome } from "./water-actions";
 import { getCurrentPhase, getPhaseColors, type DayPhase } from "./day-phase";
 import type { HabitView } from "@/features/habits/HabitsPanel";
 import type { BiomeDecoration } from "@/generated/prisma/client";
 import { placeDecoration, deleteDecoration } from "./decorations-actions";
 import { DECORATIONS_LIST, DECORATIONS_CONFIG } from "./decorations-config";
-import { Sparkles, Sprout, X, Store } from "lucide-react";
+import { Sparkles, Sprout, X, Store, Droplets } from "lucide-react";
 import { createPortal } from "react-dom";
 
 interface BiomeSceneProps {
@@ -438,6 +442,76 @@ function Ground({
   );
 }
 
+/**
+ * A river crossing the circular terrain. Width, opacity and flow speed are
+ * driven by `caudal(waterBalance)`: a thin dry trickle at 0 water, a wide
+ * flowing stream when full. The surface is a flat translucent plane sitting
+ * just above the ground; flow is faked by scrolling a procedural stripe texture
+ * along the river's length (no per-frame allocations — only a Vector2 mutation).
+ */
+function buildRiverTexture(): DataTexture {
+  const size = 64;
+  const data = new Uint8Array(size * size * 4);
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const i = (y * size + x) * 4;
+      const wave = Math.sin((y / size) * Math.PI * 6) * 0.5 + 0.5;
+      const ripple =
+        Math.sin((x / size) * Math.PI * 4 + (y / size) * Math.PI * 2) * 0.18;
+      const v = wave * 0.45 + ripple + 0.45;
+      data[i] = Math.round(70 + v * 50);       // R
+      data[i + 1] = Math.round(130 + v * 80);  // G
+      data[i + 2] = Math.round(205 + v * 50);  // B
+      data[i + 3] = 255;                        // A
+    }
+  }
+  const tex = new DataTexture(data, size, size, RGBAFormat);
+  tex.wrapS = RepeatWrapping;
+  tex.wrapT = RepeatWrapping;
+  tex.repeat.set(1, 3);
+  tex.needsUpdate = true;
+  return tex;
+}
+
+function River({ waterBalance }: { waterBalance: number }) {
+  const flow = useMemo(() => caudal(waterBalance), [waterBalance]);
+
+  // Procedural ripple texture built once; passed to the material as its map.
+  const texture = useMemo(() => buildRiverTexture(), []);
+
+  // Scroll the texture through the JSX-attached material ref so the per-frame
+  // update only touches `ref.current` (no allocations, no render-time reads).
+  const matRef = useRef<MeshStandardMaterial>(null);
+  useFrame((_, delta) => {
+    const map = matRef.current?.map;
+    if (map) {
+      map.offset.y -= delta * flow.flowSpeed * 0.35;
+    }
+  });
+
+  // Length spans the full disc diameter; width comes from the caudal.
+  const length = TERRAIN_RADIUS * 2;
+
+  return (
+    // Diagonal crossing via the group's Y rotation; the mesh lies flat.
+    <group rotation={[0, Math.PI / 6, 0]}>
+      <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[flow.width, length]} />
+        <meshStandardMaterial
+          ref={matRef}
+          map={texture}
+          color="#bfe6ff"
+          transparent
+          opacity={flow.opacity}
+          roughness={0.2}
+          metalness={0.1}
+          depthWrite={false}
+        />
+      </mesh>
+    </group>
+  );
+}
+
 // ── Dynamic lighting ─────────────────────────────────────────────────────────
 
 /**
@@ -715,6 +789,9 @@ interface BiomeSceneProps {
   isAdmin?: boolean;
   decorations?: BiomeDecoration[];
   seeds?: number;
+  waterBalance?: number;
+  growth?: number;
+  health?: number;
   showShop?: boolean;
 }
 
@@ -725,6 +802,9 @@ export default function BiomeScene({
   isAdmin = false,
   decorations = [],
   seeds = 0,
+  waterBalance = 0,
+  growth = 20,
+  health = 80,
   showShop = false,
 }: BiomeSceneProps) {
   useEffect(() => {
@@ -777,6 +857,12 @@ export default function BiomeScene({
     z: number;
   } | null>(null);
 
+  // Shared pending flag for water actions (buy / pour) to avoid double clicks.
+  const [waterPending, setWaterPending] = useState(false);
+
+  // Default pour amount when watering the biome.
+  const WATER_POUR_AMOUNT = 10;
+
   // Build daysData including habit title for tooltips
   const daysData = useMemo(() => {
     const data: { dayIndex: number; habits: { id: string; title: string; weight: number; status: "completed" | "pending" | "failed" }[] }[] = [];
@@ -815,6 +901,18 @@ export default function BiomeScene({
   const placements = useMemo(
     () => generateBiomeVegetation(daysData),
     [daysData],
+  );
+
+  // Ambient ground cover so the terrain looks lush even with few habits. Merged
+  // into the habit-driven vegetation and rendered through the same flora path.
+  const understory = useMemo(
+    () => generateUnderstory(growth, health),
+    [growth, health],
+  );
+
+  const allPlacements = useMemo(
+    () => [...placements, ...understory],
+    [placements, understory],
   );
 
   function toRelative(clientX: number, clientY: number) {
@@ -875,8 +973,11 @@ export default function BiomeScene({
           }}
         />
 
-        {/* Render procedural vegetation */}
-        {placements.map((p, i) => {
+        {/* River driven by the water balance (caudal) */}
+        <River waterBalance={waterBalance} />
+
+        {/* Render procedural vegetation (habit-driven + ambient understory) */}
+        {allPlacements.map((p, i) => {
           const isMain = p.kind === "main";
           const v = isMain ? 1.0 : vitality(80 + (i % 20));
           const foliage = foliageColor(type, isMain ? 100 : 80);
@@ -1060,6 +1161,9 @@ export default function BiomeScene({
                 <div className="flex items-center gap-1 bg-emerald-500/10 px-2.5 py-1 rounded-full text-xs font-semibold text-emerald-400 ring-1 ring-emerald-500/20">
                   🌱 {seeds}
                 </div>
+                <div className="flex items-center gap-1 bg-sky-500/10 px-2.5 py-1 rounded-full text-xs font-semibold text-sky-300 ring-1 ring-sky-500/20">
+                  💧 {waterBalance}
+                </div>
                 <button
                   onClick={() => router.push("?", { scroll: false })}
                   className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white/70 hover:bg-white/20 hover:text-white transition"
@@ -1069,7 +1173,14 @@ export default function BiomeScene({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 p-4 max-h-[60vh] overflow-y-auto">
+            <div className="px-4 pt-3">
+              <p className="text-sm text-white/60">
+                ¡Completa tus hábitos para conseguir más semillas!
+              </p>
+            </div>
+
+            <div className="p-4 max-h-[60vh] overflow-y-auto space-y-5">
+              <div className="grid grid-cols-2 gap-3">
               {DECORATIONS_LIST.map((item) => {
                 const canAfford = seeds >= item.cost;
                 const isSelected = selectedDecorationType === item.id;
@@ -1119,6 +1230,62 @@ export default function BiomeScene({
                   </div>
                 );
               })}
+              </div>
+
+              {/* Agua — water packs bought with seeds */}
+              <div>
+                <h4 className="flex items-center gap-1.5 text-sm font-semibold text-sky-300 mb-2">
+                  <Droplets className="h-4 w-4" />
+                  Agua
+                </h4>
+                <p className="text-xs text-white/50 mb-3">
+                  Compra agua para alimentar el río y regar tu bioma.
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  {WATER_PACKS.map((pack) => {
+                    const canAfford = seeds >= pack.seeds;
+                    return (
+                      <div
+                        key={pack.id}
+                        className="flex flex-col justify-between p-3 rounded-xl border border-white/10 bg-white/5 transition-all hover:bg-white/10"
+                      >
+                        <div>
+                          <div className="text-2xl mb-1 select-none">{pack.emoji}</div>
+                          <div className="text-sm font-semibold text-white">{pack.label}</div>
+                          <div className="text-xs text-sky-300/80 leading-tight mt-1">
+                            +{pack.water} 💧 de agua
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between mt-4">
+                          <span className="text-xs font-mono text-emerald-400 bg-emerald-500/5 px-2 py-1 rounded">
+                            {pack.seeds} 🌱
+                          </span>
+                          <button
+                            disabled={!canAfford || waterPending}
+                            onClick={async () => {
+                              setWaterPending(true);
+                              const res = await buyWater(pack.id);
+                              setWaterPending(false);
+                              if (!res.success) {
+                                alert(res.error || "Error al comprar agua.");
+                              } else {
+                                router.refresh();
+                              }
+                            }}
+                            className={`text-xs font-semibold px-3 py-1.5 rounded transition-colors ${
+                              canAfford && !waterPending
+                                ? "bg-sky-400 text-black hover:bg-sky-300"
+                                : "bg-white/5 text-zinc-500 cursor-not-allowed"
+                            }`}
+                          >
+                            Comprar
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
         </div>,
@@ -1157,6 +1324,37 @@ export default function BiomeScene({
           </div>
         </div>,
         document.body
+      )}
+
+      {/* Water control + balance display */}
+      {!readOnly && (
+        <div className="pointer-events-auto absolute bottom-4 left-4 z-40 flex items-center gap-2 rounded-2xl bg-black/60 px-3 py-2 backdrop-blur-md ring-1 ring-white/10 shadow-xl">
+          <span className="flex items-center gap-1 text-xs font-semibold text-sky-300">
+            <Droplets className="h-4 w-4" />
+            {waterBalance}
+          </span>
+          <button
+            disabled={waterBalance <= 0 || waterPending}
+            onClick={async () => {
+              setWaterPending(true);
+              const res = await waterTheBiome(WATER_POUR_AMOUNT);
+              setWaterPending(false);
+              if (!res.success) {
+                alert(res.error || "Error al regar el bioma.");
+              } else {
+                router.refresh();
+              }
+            }}
+            className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+              waterBalance > 0 && !waterPending
+                ? "bg-sky-400 text-black hover:bg-sky-300"
+                : "bg-white/5 text-zinc-500 cursor-not-allowed"
+            }`}
+            title="Regar el bioma con tu agua"
+          >
+            Regar
+          </button>
+        </div>
       )}
 
       {/* Control de hora del día (Simulador) */}

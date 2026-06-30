@@ -3,6 +3,8 @@ import { Users } from "lucide-react";
 import { requireProfile } from "@/features/auth/guards";
 import { listCohort, getInbox } from "@/features/social/queries";
 import { markEncouragementRead } from "@/features/social/actions";
+import { claimWater } from "@/features/biome/water-actions";
+import { WATER_PER_GESTURE } from "@/features/biome/water-logic";
 
 export default async function ComunidadPage() {
   const viewer = await requireProfile();
@@ -96,20 +98,36 @@ export default async function ComunidadPage() {
                         {new Date(item.createdAt).toLocaleDateString("es", { day: "numeric", month: "short" })}
                       </p>
                     </div>
-                    {!item.read && (
+                    {item.type === "water" && !item.claimed ? (
                       <form
                         action={async () => {
                           "use server";
-                          await markEncouragementRead(item.id);
+                          await claimWater(item.id);
                         }}
                       >
                         <button
                           type="submit"
-                          className="shrink-0 rounded-lg bg-white/10 px-2 py-1 text-xs text-white/60 hover:bg-white/20 transition"
+                          className="shrink-0 rounded-lg bg-sky-500/90 px-2 py-1 text-xs font-medium text-black hover:bg-sky-400 transition"
                         >
-                          Marcar leído
+                          💧 Reclamar +{WATER_PER_GESTURE}
                         </button>
                       </form>
+                    ) : (
+                      !item.read && (
+                        <form
+                          action={async () => {
+                            "use server";
+                            await markEncouragementRead(item.id);
+                          }}
+                        >
+                          <button
+                            type="submit"
+                            className="shrink-0 rounded-lg bg-white/10 px-2 py-1 text-xs text-white/60 hover:bg-white/20 transition"
+                          >
+                            Marcar leído
+                          </button>
+                        </form>
+                      )
                     )}
                   </div>
                 </li>

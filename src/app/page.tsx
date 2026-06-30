@@ -54,7 +54,7 @@ export default async function Home(props: {
     }),
     prisma.profile.findUnique({
       where: { id: profile.id },
-      select: { seeds: true, currentStreak: true },
+      select: { seeds: true, currentStreak: true, water: true },
     }),
   ]);
 
@@ -80,6 +80,9 @@ export default async function Home(props: {
           isAdmin={profile.role === "admin"}
           decorations={decorations}
           seeds={dbProfile?.seeds ?? 0}
+          waterBalance={dbProfile?.water ?? 0}
+          growth={growth}
+          health={health}
           showShop={showShop}
         />
       </div>
@@ -94,9 +97,9 @@ export default async function Home(props: {
           <h1 className="text-xl font-semibold text-white drop-shadow-md md:text-2xl flex items-center gap-2">
             Terrario Digital
           </h1>
-          <p className="text-sm text-white/80 drop-shadow">
-            {`Hola, ${profile.name}`}
-          </p>
+          <p className="text-lg text-white/80 drop-shadow">
+  			Hola, <strong className="text-2xl font-semibold"> {profile.name} </strong>
+		  </p>
         </div>
 
         <nav className="pointer-events-auto flex flex-wrap gap-2">
