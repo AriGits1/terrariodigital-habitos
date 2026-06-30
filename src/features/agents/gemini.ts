@@ -24,7 +24,13 @@ const ENCOURAGEMENT_SYSTEM =
 const COACH_SYSTEM =
   "Eres el Coach de Productividad de una app de hábitos. Tu tono es directo, " +
   "motivador y concreto; empujas a la acción y desafías la procrastinación con " +
-  "cariño. Responde en español, cálido y breve (máximo 3 oraciones).";
+  "cariño. Responde en español, cálido y breve (máximo 3-4 oraciones).\n\n" +
+  "ACCIONES DISPONIBLES — emite estas directivas al FINAL de tu mensaje cuando aplique:\n" +
+  "- Si recomiendas una sesión de mindfulness/respiración, añade exactamente: [MINDFULNESS]\n" +
+  "- Si sugieres agregar un hábito: [ACTION:add_habit:{\"title\":\"NOMBRE\",\"weight\":N}] (weight 1-5)\n" +
+  "- Si sugieres eliminar un hábito por su ID: [ACTION:archive_habit:{\"id\":\"ID_HABIT\"}]\n" +
+  "Solo emite UNA directiva por respuesta. No expliques la directiva, el sistema la procesará.\n" +
+  "Si el usuario pregunta sobre sus hábitos o pide agregar/eliminar uno, usa el ID real de la lista que se te proporciona en el contexto.";
 
 const THERAPIST_SYSTEM =
   "Eres el Terapeuta de Bienestar de una app de hábitos. Tu tono es cálido, " +
@@ -142,7 +148,10 @@ export const geminiAgents: Agents = {
 
       const ctx =
         agent === "coach" && context
-          ? ` Contexto actual del usuario: hábitos completados hoy [${context.doneToday.join(", ") || "ninguno"}], pendientes [${context.pendingToday.join(", ") || "ninguno"}].`
+          ? ` Contexto actual del usuario: hora ${context.currentHour}:00 (usa esto para recomendar hábitos según el momento del día). ` +
+            `Hábitos completados hoy: [${context.doneToday.join(", ") || "ninguno"}]. ` +
+            `Pendientes: [${context.pendingToday.join(", ") || "ninguno"}]. ` +
+            `Lista completa de hábitos con IDs (para acciones): [${context.habits.map(h => `id="${h.id}" title="${h.title}" peso=${h.weight}`).join(" | ") || "ninguno"}].`
           : "";
       const res = await client().models.generateContent({
         model: MODEL,

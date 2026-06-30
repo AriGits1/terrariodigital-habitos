@@ -107,7 +107,7 @@ export const stubAgents: Agents = {
 
     if (agent === "therapist") {
       if (/(ansie|nervios|miedo|estr[eé]s|abrumad)/.test(lower)) {
-        return "Respira hondo conmigo. Lo que sientes es real y válido. ¿Probamos una pausa de mindfulness de un minuto?";
+        return "Respira hondo conmigo. Lo que sientes es real y válido. Una pausa de mindfulness puede ayudarte mucho ahora. [MINDFULNESS]";
       }
       if (/(triste|mal|solo|sola|deprim)/.test(lower)) {
         return "Gracias por confiarme esto. No estás solo. ¿Qué es lo más pequeño que te haría sentir un poco mejor hoy?";
@@ -119,11 +119,23 @@ export const stubAgents: Agents = {
     if (/(procrastin|no puedo|despu[eé]s|ma[ñn]ana|flojera|cansad)/.test(lower)) {
       return "Esa es la voz de la procrastinación, no la tuya. Regla de los 5 minutos: arranca solo 5 minutos en una tarea. El arranque es lo único difícil.";
     }
+    if (/(estr[eé]s|agobiad|abrumad|ansios)/.test(lower)) {
+      return "Noto que estás bajo presión. Antes de continuar, te recomiendo una pausa de respiración para resetear. [MINDFULNESS]";
+    }
     if (/(tesis|estudiar|proyecto|trabajo)/.test(lower)) {
       return "Divídelo en una sola acción concreta que puedas hacer en 25 minutos. ¿Cuál sería ese primer bloque? Lo hacemos ahora.";
     }
+    if (/(agregar|añadir|nuevo h[aá]bito|crear h[aá]bito)/.test(lower)) {
+      return "¡Buena idea! Agregar un hábito nuevo es un paso valioso. ¿Qué nombre le ponemos y qué tan importante es para ti (1-5)?";
+    }
     if (context && context.pendingToday.length > 0) {
-      return `Antes de seguir charlando: tienes "${context.pendingToday[0]}" pendiente. Cierra eso y vuelve. La acción primero, la teoría después.`;
+      const hour = context.currentHour;
+      const timeHint = hour >= 6 && hour < 12
+        ? "Es temprano — el mejor momento para atacar el primer bloque del día."
+        : hour >= 12 && hour < 18
+        ? "Es tarde. Energía al máximo — aprovecha antes que baje."
+        : "Ya es noche. Un hábito pendiente antes de dormir vale doble.";
+      return `${timeHint} Tienes "${context.pendingToday[0]}" pendiente. ¡Vamos!`;
     }
     return "Concreto y al hueso: ¿cuál es la próxima acción de 25 minutos que vas a ejecutar? Dímela y la convertimos en hábito.";
   },

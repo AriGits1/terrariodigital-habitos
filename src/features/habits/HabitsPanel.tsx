@@ -4,7 +4,7 @@ import { useOptimistic, useState, useTransition, type TransitionStartFunction } 
 import Link from "next/link";
 import { addHabit, archiveHabit, toggleHabitToday, applyDifficultySuggestion } from "./actions";
 import type { DifficultySuggestion } from "@/features/adaptation/engine";
-import { Check, X, MessageCircle, Plus } from "lucide-react";
+import { Check, X, Plus, Leaf } from "lucide-react";
 
 export interface HabitView {
   id: string;
@@ -55,12 +55,11 @@ export default function HabitsPanel({
 }: {
   habits: HabitView[];
 }) {
-  // Optimistic state makes the list respond instantly; the server revalidation
-  // reconciles it afterwards, so it never feels stuck waiting on the network.
   const [optimisticHabits, applyOptimistic] = useOptimistic(habits, reduce);
   const [, startTransition] = useTransition();
   const [newTitle, setNewTitle] = useState("");
   const [newWeight, setNewWeight] = useState(3);
+  const [isOpen, setIsOpen] = useState(true);
 
   function toggle(id: string) {
     startTransition(async () => {
@@ -91,17 +90,47 @@ export default function HabitsPanel({
   const doneCount = optimisticHabits.filter((h) => h.doneToday).length;
   const atLimit = optimisticHabits.length >= 5;
 
-  return (
-    <aside className="pointer-events-auto flex max-h-[52vh] w-full flex-col gap-3 overflow-y-auto rounded-3xl bg-black/45 p-4 text-white shadow-2xl ring-1 ring-white/10 backdrop-blur-xl md:max-h-none md:w-80 md:rounded-2xl md:p-5">
-      {/* Drag handle (mobile sheet affordance) */}
-      <div className="mx-auto h-1 w-10 rounded-full bg-white/25 md:hidden" />
-      <div className="flex items-baseline justify-between">
-        <h2 className="text-lg font-semibold">Hábitos de hoy</h2>
-        <span className="text-sm text-white/70">
+  // ── Collapsed chip ─────────────────────────────────────────────────────────
+  if (!isOpen) {
+    return (
+      <button
+        onClick={() => setIsOpen(true)}
+        className="pointer-events-auto flex items-center gap-2 rounded-full bg-black/60 px-4 py-2.5 text-sm font-medium text-white shadow-xl ring-1 ring-white/10 backdrop-blur-xl hover:bg-black/75 transition-all"
+        aria-label="Abrir panel de hábitos"
+      >
+        <Leaf className="h-4 w-4 text-emerald-400" />
+        Hábitos
+        <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-xs text-emerald-300">
           {doneCount}/{optimisticHabits.length}
         </span>
+      </button>
+    );
+  }
+
+  // Full panel
+  return (
+    <aside data-tour="habits" className="pointer-events-auto flex max-h-[52vh] w-full flex-col gap-3 overflow-y-auto rounded-3xl bg-black/45 p-4 text-white shadow-2xl ring-1 ring-white/10 backdrop-blur-xl md:max-h-none md:w-80 md:rounded-2xl md:p-5">
+      {/* Drag handle (mobile sheet affordance) */}
+      <div className="mx-auto h-1 w-10 rounded-full bg-white/25 md:hidden" />
+
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Hábitos de hoy</h2>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-white/70">
+            {doneCount}/{optimisticHabits.length}
+          </span>
+          <button
+            onClick={() => setIsOpen(false)}
+            className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-white/50 hover:bg-white/20 hover:text-white transition"
+            aria-label="Cerrar panel de hábitos"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
       </div>
 
+      {/* Habit list */}
       <ul className="flex flex-col gap-2">
         {optimisticHabits.map((h) => (
           <li key={h.id} className="flex flex-col gap-1">
@@ -158,6 +187,7 @@ export default function HabitsPanel({
         )}
       </ul>
 
+      {/* Add habit form */}
       <div className="mt-2 flex flex-col gap-2 border-t border-white/10 pt-3">
         <input
           value={newTitle}
@@ -195,8 +225,10 @@ export default function HabitsPanel({
         </div>
       </div>
 
+      {/* Coach link */}
       <div className="mt-4 flex justify-end">
         <Link
+          data-tour="coach"
           href="?coach=true"
           scroll={false}
           className="flex items-center justify-center rounded-full bg-blue-600/80 px-4 py-2 text-sm font-medium text-white shadow-lg backdrop-blur-md transition-colors hover:bg-blue-500"
@@ -208,9 +240,7 @@ export default function HabitsPanel({
   );
 }
 
-// ---------------------------------------------------------------------------
-// SuggestionChip — non-blocking difficulty suggestion UI (Surface 1)
-// ---------------------------------------------------------------------------
+// ── SuggestionChip ─────────────────────────────────────────────────────────
 
 function SuggestionChip({
   habitId,

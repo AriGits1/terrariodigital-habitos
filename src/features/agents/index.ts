@@ -1,11 +1,13 @@
 import type { Agents } from "./types";
 import { stubAgents } from "./stub";
 import { geminiAgents } from "./gemini";
+import { groqAgents } from "./groq";
 
 export type {
   Agents,
   MoodInference,
   CoachContext,
+  CoachHabit,
   CoachSuggestion,
   AgentKind,
   ChatTurn,
@@ -14,12 +16,11 @@ export type {
 /**
  * Factory that selects the active agent implementation.
  *
- * When GEMINI_API_KEY is present we use the Gemini-backed agents; otherwise we
- * fall back to the keyword stub. This is the single swap point — no other file
- * imports a concrete provider.
+ * When GROQ_API_KEY is present we use Groq. If GEMINI_API_KEY is present we use Gemini.
+ * Otherwise we fall back to the keyword stub.
  */
 export function getAgents(): Agents {
-  // The single swap point: real LLM when a key exists, deterministic stub when
-  // it doesn't. No other file knows which implementation is active.
-  return process.env.GEMINI_API_KEY ? geminiAgents : stubAgents;
+  if (process.env.GROQ_API_KEY) return groqAgents;
+  if (process.env.GEMINI_API_KEY) return geminiAgents;
+  return stubAgents;
 }

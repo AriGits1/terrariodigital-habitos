@@ -35,7 +35,7 @@ móvil (con ícono propio y pantalla completa). Cada bioma tiene su propia flora
 |---|---|
 | **Gráfica no convencional** | Bioma 3D interactivo con Three.js (react-three-fiber) |
 | **Voz** | Diario matutino con Web Speech API (dictado en español) |
-| **LLM** | Dos agentes (Coach + Terapeuta) sobre Google Gemini |
+| **LLM** | Dos agentes (Coach + Terapeuta) sobre Google Gemini o Groq |
 
 ### Módulos del proyecto
 
@@ -61,7 +61,7 @@ móvil (con ícono propio y pantalla completa). Cada bioma tiene su propia flora
 | Estilos | **Tailwind CSS 4** |
 | 3D | **Three.js** + `@react-three/fiber` + `@react-three/drei` |
 | Base de datos | **Prisma 7** ORM + **PostgreSQL 17** (dev y prod) |
-| LLM | **Google Gemini** (`@google/genai`, modelo `gemini-2.5-flash`) |
+| LLM | **Google Gemini** (`@google/genai`, modelo `gemini-2.5-flash`) y **Groq** (`groq-sdk`) |
 | Voz | Web Speech API (nativa del navegador) |
 | Háptica | Vibration API (nativa del navegador) |
 
@@ -98,12 +98,12 @@ docker compose up -d
 > **Puerto 5433 (no 5432).** El contenedor expone Postgres en el host en el
 > puerto **5433** a propósito, para no chocar con un Postgres que ya tengas
 > instalado en tu máquina ocupando el 5432. Si el comando falla por puerto
-> ocupado, revisá qué proceso usa el 5433 o cambialo en `docker-compose.yml`
-> (recordá actualizar también la URL del `.env`).
+> ocupado, revisa qué proceso usa el 5433 o cámbialo en `docker-compose.yml`
+> (recuerda actualizar también la URL del `.env`).
 
 ### 3. Configurar la conexión (`.env`)
 
-Creá un archivo **`.env`** en la raíz con la URL de la base. Este archivo está
+Crea un archivo **`.env`** en la raíz con la URL de la base. Este archivo está
 en `.gitignore`, así que cada quien lo crea localmente:
 
 ```
@@ -120,7 +120,7 @@ echo 'DATABASE_URL="postgresql://terrario:terrario@localhost:5433/terrario?schem
 [System.IO.File]::WriteAllText("$PWD\.env", 'DATABASE_URL="postgresql://terrario:terrario@localhost:5433/terrario?schema=public"' + "`n")
 ```
 
-> Si preferís, creá el `.env` a mano en tu editor con esa única línea. Asegurate
+> Si prefieres, crea el `.env` a mano en tu editor con esa única línea. Asegúrate
 > de guardarlo como **UTF-8 sin BOM**.
 
 ### 4. Aplicar el esquema y cargar datos
@@ -133,15 +133,16 @@ npm run db:seed      # carga datos simulados de demostración
 ```
 
 > Si `db:migrate` falla con `P1000 Authentication failed`, casi siempre es que
-> `localhost:5432/5433` está pegando contra otro Postgres. Confirmá que el
+> `localhost:5432/5433` está pegando contra otro Postgres. Confirma que el
 > contenedor está sano con `docker compose ps` y que el `.env` apunta al **5433**.
 
-### 5. Configurar la clave de Gemini (opcional pero recomendado)
+### 5. Configurar la clave de Gemini o Groq (opcional pero recomendado)
 
-Creá un archivo **`.env.local`** en la raíz con tu clave:
+Crea un archivo **`.env.local`** en la raíz con tu clave (puedes usar una o ambas):
 
 ```
 GEMINI_API_KEY=tu_clave_de_google_ai_studio
+GROQ_API_KEY=tu_clave_de_groq_cloud
 ```
 
 > Sin clave, los agentes funcionan igual con un **stub determinista** que imita
@@ -173,14 +174,14 @@ npm run dev
 
 ### 📱 Instalarla en el móvil (PWA)
 
-La app es una **PWA instalable**. Como instalar requiere HTTPS, exponé el
+La app es una **PWA instalable**. Como instalar requiere HTTPS, expón el
 servidor local con un túnel:
 
 ```bash
 npx cloudflared tunnel --url http://localhost:3000
 ```
 
-Abrí la URL `https://…trycloudflare.com` en el celular → menú → **"Instalar
+Abre la URL `https://…trycloudflare.com` en el celular → menú → **"Instalar
 aplicación"**. Detalle en la [Guía del equipo](docs/GUIA-EQUIPO.md).
 
 ---

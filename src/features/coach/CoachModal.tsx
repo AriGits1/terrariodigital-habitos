@@ -1,8 +1,8 @@
+import Link from "next/link";
 import { getAgents, type ChatTurn } from "@/features/agents";
 import { getCoachContext, getChatHistory } from "@/features/coach/queries";
 import CoachChat from "./CoachChat";
 import { X } from "lucide-react";
-import Link from "next/link";
 
 export default async function CoachModal({
   profileId,
@@ -57,6 +57,7 @@ export default async function CoachModal({
             agent="coach"
             initialHistory={initialHistory}
             autoMessage={habitQuestion}
+            coachHabits={context.habits}
           />
         </div>
       </div>

@@ -13,6 +13,8 @@ import type { ModuleKey } from "@/features/adaptation/engine";
 import BiomeSceneWrapper from "@/features/biome/BiomeSceneWrapper";
 import { maybeDecayBiome } from "@/features/habits/biome-decay";
 import { prisma } from "@/lib/db";
+import TourOverlay from "@/features/tour/TourOverlay";
+import ReplayTourButton from "@/features/tour/ReplayTourButton";
 
 const BIOME_LABELS: Record<BiomeType, string> = {
   forest: "Bosque",
@@ -102,7 +104,7 @@ export default async function Home(props: {
 		  </p>
         </div>
 
-        <nav className="pointer-events-auto flex flex-wrap gap-2">
+        <nav data-tour="nav" className="pointer-events-auto flex flex-wrap gap-2">
           {moduleOrder.map((k: ModuleKey) => {
             const item = NAV[k];
             const hasLowEngagement = lowEngagement.has(k);
@@ -117,7 +119,7 @@ export default async function Home(props: {
                 {hasLowEngagement && (
                   <span
                     className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-amber-400"
-                    title="Hace tiempo que no visitás esta sección"
+                    title="Hace tiempo que no visitas esta sección"
                     aria-label="Sección sin visitar recientemente"
                   />
                 )}
@@ -172,7 +174,7 @@ export default async function Home(props: {
           </details>
         )}
 
-        <div className="flex gap-2 md:gap-3">
+        <div data-tour="stats" className="flex gap-2 md:gap-3">
           <StatCard label="Bioma" value={BIOME_LABELS[type]} />
           <StatCard label="Crecimiento" value={`${growth}%`} />
           <StatCard label="Salud" value={`${health}%`} />
@@ -189,7 +191,7 @@ export default async function Home(props: {
       {showCoach && <CoachModal profileId={profile.id} habitId={habitId} habitTitle={habitTitle} />}
 
       {/* Settings Button */}
-      <div className="pointer-events-auto absolute bottom-4 right-4 md:bottom-6 md:right-6 z-10">
+      <div data-tour="settings" className="pointer-events-auto absolute bottom-4 right-4 md:bottom-6 md:right-6 z-10 flex flex-col items-end gap-2">
         <Link
           href="/configuracion"
           className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500 text-black hover:bg-emerald-400 hover:scale-105 shadow-lg backdrop-blur-md transition-all"
@@ -197,7 +199,11 @@ export default async function Home(props: {
         >
           <Settings className="h-5 w-5" />
         </Link>
+        <ReplayTourButton />
       </div>
+
+      {/* First-time user tour */}
+      <TourOverlay />
     </main>
   );
 }

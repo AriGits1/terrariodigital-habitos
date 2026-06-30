@@ -40,6 +40,11 @@ export default function PushNotificationToggle({ vapidPublicKey }: { vapidPublic
   }
 
   async function handleSubscribe() {
+    if (!vapidPublicKey) {
+      alert("La clave pública VAPID no está configurada.");
+      return;
+    }
+
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
       alert("Tu navegador no soporta notificaciones Web Push.");
       return;
@@ -52,7 +57,15 @@ export default function PushNotificationToggle({ vapidPublicKey }: { vapidPublic
 
       if (perm === "granted") {
         const registration = await navigator.serviceWorker.ready;
-        const sub = await registration.pushManager.subscribe({
+        
+        // Si hay una suscripción antigua "pegada" con otra llave, puede causar AbortError.
+        // Intentamos obtenerla y desuscribirla primero.
+        let sub = await registration.pushManager.getSubscription();
+        if (sub) {
+          await sub.unsubscribe();
+        }
+
+        sub = await registration.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
         });
@@ -70,9 +83,13 @@ export default function PushNotificationToggle({ vapidPublicKey }: { vapidPublic
           alert("Error al guardar suscripción en el servidor.");
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert("Ocurrió un error al intentar suscribirse.");
+      if (error.name === 'AbortError') {
+         alert("Error del servicio push (AbortError). Esto puede ocurrir si estás en modo Incógnito, si tu navegador bloquea notificaciones push, o si la llave VAPID es inválida. Intenta en modo normal.");
+      } else {
+         alert("Ocurrió un error al intentar suscribirse: " + error.message);
+      }
     }
     setLoading(false);
   }

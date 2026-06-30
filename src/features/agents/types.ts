@@ -13,11 +13,21 @@ export interface MoodInference {
   reply: string;
 }
 
+export interface CoachHabit {
+  id: string;
+  title: string;
+  weight: number;
+}
+
 export interface CoachContext {
   /** Habit titles completed today. */
   doneToday: string[];
   /** Habit titles still pending today. */
   pendingToday: string[];
+  /** Full habit list with ids (for add/archive actions). */
+  habits: CoachHabit[];
+  /** Current hour (0-23) in the user's timezone for time-aware suggestions. */
+  currentHour: number;
 }
 
 export interface CoachSuggestion {

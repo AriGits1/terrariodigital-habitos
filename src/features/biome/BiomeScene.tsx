@@ -1326,9 +1326,9 @@ export default function BiomeScene({
         document.body
       )}
 
-      {/* Water control + balance display */}
+      {/* Water control + balance display — positioned below the stats cards */}
       {!readOnly && (
-        <div className="pointer-events-auto absolute bottom-4 left-4 z-40 flex items-center gap-2 rounded-2xl bg-black/60 px-3 py-2 backdrop-blur-md ring-1 ring-white/10 shadow-xl">
+        <div className="pointer-events-auto absolute top-[204px] left-4 z-40 flex items-center gap-2 rounded-2xl bg-black/60 px-3 py-2 backdrop-blur-md ring-1 ring-white/10 shadow-xl md:top-[228px] md:left-6">
           <span className="flex items-center gap-1 text-xs font-semibold text-sky-300">
             <Droplets className="h-4 w-4" />
             {waterBalance}
@@ -1358,40 +1358,42 @@ export default function BiomeScene({
       )}
 
       {/* Control de hora del día (Simulador) */}
-      <div className="pointer-events-auto absolute bottom-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 rounded-2xl bg-black/60 px-4 py-2.5 backdrop-blur-md ring-1 ring-white/10 shadow-xl">
-        <span className="text-lg select-none" title={`Fase: ${effectivePhase}`}>
-          {effectivePhase === "dawn"  ? "🌅"
-         : effectivePhase === "day"   ? "☀️"
-         : effectivePhase === "dusk"  ? "🌆"
-         : "🌙"}
-        </span>
+      {isAdmin && (
+        <div className="pointer-events-auto absolute bottom-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 rounded-2xl bg-black/60 px-4 py-2.5 backdrop-blur-md ring-1 ring-white/10 shadow-xl">
+          <span className="text-lg select-none" title={`Fase: ${effectivePhase}`}>
+            {effectivePhase === "dawn"  ? "🌅"
+           : effectivePhase === "day"   ? "☀️"
+           : effectivePhase === "dusk"  ? "🌆"
+           : "🌙"}
+          </span>
 
-        <input
-          id="admin-hour-slider"
-          type="range"
-          min={0}
-          max={23}
-          step={1}
-          value={hourOverride ?? new Date().getHours()}
-          onChange={(e) => setHourOverride(Number(e.target.value))}
-          className="h-1.5 w-32 cursor-pointer accent-emerald-400"
-          title="Simular hora del día"
-        />
+          <input
+            id="admin-hour-slider"
+            type="range"
+            min={0}
+            max={23}
+            step={1}
+            value={hourOverride ?? new Date().getHours()}
+            onChange={(e) => setHourOverride(Number(e.target.value))}
+            className="h-1.5 w-32 cursor-pointer accent-emerald-400"
+            title="Simular hora del día"
+          />
 
-        <span className="min-w-[2.5rem] text-center text-xs font-mono text-white/80">
-          {String(hourOverride ?? new Date().getHours()).padStart(2, "0")}:00
-        </span>
+          <span className="min-w-[2.5rem] text-center text-xs font-mono text-white/80">
+            {String(hourOverride ?? new Date().getHours()).padStart(2, "0")}:00
+          </span>
 
-        {hourOverride !== null && (
-          <button
-            onClick={() => setHourOverride(null)}
-            className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-white/60 hover:bg-white/20 hover:text-white transition"
-            title="Restaurar hora real"
-          >
-            ↺
-          </button>
-        )}
-      </div>
+          {hourOverride !== null && (
+            <button
+              onClick={() => setHourOverride(null)}
+              className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-white/60 hover:bg-white/20 hover:text-white transition"
+              title="Restaurar hora real"
+            >
+              ↺
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
