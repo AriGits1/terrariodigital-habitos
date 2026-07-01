@@ -1,9 +1,7 @@
 "use client";
 
-import { useOptimistic, useState, useTransition, type TransitionStartFunction } from "react";
-import Link from "next/link";
-import { addHabit, archiveHabit, toggleHabitToday, applyDifficultySuggestion } from "./actions";
-import type { DifficultySuggestion } from "@/features/adaptation/engine";
+import { useOptimistic, useState, useTransition } from "react";
+import { addHabit, archiveHabit, toggleHabitToday } from "./actions";
 import { Check, X, Plus, Leaf } from "lucide-react";
 
 export interface HabitView {
@@ -14,15 +12,12 @@ export interface HabitView {
   doneToday: boolean;
   weeklyLogs?: string[];
   createdAt?: string;
-  suggestion?: DifficultySuggestion;
-  suggestionReason?: string | null;
 }
 
 type OptimisticAction =
   | { kind: "toggle"; id: string }
   | { kind: "add"; title: string; weight: number }
-  | { kind: "archive"; id: string }
-  | { kind: "dismiss_suggestion"; id: string };
+  | { kind: "archive"; id: string };
 
 function reduce(state: HabitView[], action: OptimisticAction): HabitView[] {
   switch (action.kind) {
@@ -43,10 +38,6 @@ function reduce(state: HabitView[], action: OptimisticAction): HabitView[] {
       ];
     case "archive":
       return state.filter((h) => h.id !== action.id);
-    case "dismiss_suggestion":
-      return state.map((h) =>
-        h.id === action.id ? { ...h, suggestion: undefined } : h,
-      );
   }
 }
 
@@ -165,19 +156,6 @@ export default function HabitsPanel({
                 <X className="h-4 w-4" />
               </button>
             </div>
-            {(h.suggestion === "level-up" || h.suggestion === "ease") && (
-              <SuggestionChip
-                habitId={h.id}
-                suggestion={h.suggestion}
-                reason={h.suggestionReason ?? null}
-                startTransition={startTransition}
-                onDismiss={() => {
-                  startTransition(() => {
-                    applyOptimistic({ kind: "dismiss_suggestion", id: h.id });
-                  });
-                }}
-              />
-            )}
           </li>
         ))}
         {optimisticHabits.length === 0 && (
@@ -225,80 +203,7 @@ export default function HabitsPanel({
         </div>
       </div>
 
-      {/* Coach link */}
-      <div className="mt-4 flex justify-end">
-        <Link
-          data-tour="coach"
-          href="?coach=true"
-          scroll={false}
-          className="flex items-center justify-center rounded-full bg-blue-600/80 px-4 py-2 text-sm font-medium text-white shadow-lg backdrop-blur-md transition-colors hover:bg-blue-500"
-        >
-          Hablar con Coach
-        </Link>
-      </div>
     </aside>
   );
 }
 
-// ── SuggestionChip ─────────────────────────────────────────────────────────
-
-function SuggestionChip({
-  habitId,
-  suggestion,
-  reason,
-  startTransition,
-  onDismiss,
-}: {
-  habitId: string;
-  suggestion: "level-up" | "ease";
-  reason: string | null;
-  startTransition: TransitionStartFunction;
-  onDismiss: () => void;
-}) {
-  const label = suggestion === "level-up" ? "Subir dificultad" : "Bajar dificultad";
-
-  function handleAccept() {
-    startTransition(async () => {
-      await applyDifficultySuggestion(habitId, true);
-    });
-  }
-
-  function handleReject() {
-    onDismiss();
-    startTransition(async () => {
-      await applyDifficultySuggestion(habitId, false);
-    });
-  }
-
-  return (
-    <div className="ml-10 flex flex-col gap-1">
-      <div className="flex items-center gap-2">
-        <span className="text-xs text-amber-300/90 font-medium">{label}</span>
-        <button
-          type="button"
-          onClick={handleAccept}
-          className="rounded bg-emerald-500/30 px-2 py-0.5 text-xs text-emerald-300 hover:bg-emerald-500/50 transition-colors"
-          aria-label={`Aceptar sugerencia: ${label}`}
-        >
-          Aceptar
-        </button>
-        <button
-          type="button"
-          onClick={handleReject}
-          className="rounded bg-white/10 px-2 py-0.5 text-xs text-white/60 hover:bg-white/20 transition-colors"
-          aria-label="Rechazar sugerencia"
-        >
-          Ignorar
-        </button>
-      </div>
-      {reason && (
-        <details className="text-xs text-white/50">
-          <summary className="cursor-pointer hover:text-white/70 list-none underline decoration-dotted">
-            ¿por qué veo esto?
-          </summary>
-          <p className="mt-1 text-white/60 leading-snug">{reason}</p>
-        </details>
-      )}
-    </div>
-  );
-}

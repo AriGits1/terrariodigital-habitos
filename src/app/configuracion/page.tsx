@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BarChart2 } from "lucide-react";
 import { requireProfile } from "@/features/auth/guards";
 import { logoutAction } from "@/features/auth/actions";
 import SettingsForm from "@/features/settings/SettingsForm";
@@ -22,9 +23,9 @@ export default async function ConfiguracionPage() {
         >
           <button
             type="submit"
-            className="rounded-lg bg-white/10 px-3 py-1 text-sm text-white/70 hover:bg-white/20 hover:text-white transition"
+            className="rounded-lg bg-red-500/20 px-3 py-1 text-sm text-red-400 hover:bg-red-500/30 hover:text-red-300 transition"
           >
-            Sign out
+            Cerrar sesión
           </button>
         </form>
       </header>
@@ -40,6 +41,16 @@ export default async function ConfiguracionPage() {
             shareTerrarium: profile.shareTerrarium,
           }}
         />
+
+        <div className="mt-5 flex items-center">
+          <Link
+            href="/analiticas"
+            className="inline-flex items-center gap-2 rounded-xl bg-white/5 px-4 py-2.5 text-sm text-white/60 hover:bg-white/10 hover:text-white transition"
+          >
+            <BarChart2 className="h-4 w-4" />
+            Ver mis analíticas
+          </Link>
+        </div>
 
         <PushNotificationToggle vapidPublicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ""} />
       </div>

@@ -89,14 +89,14 @@ export default function SettingsForm({
         onChange={setShareTerrarium}
       />
 
-      <div className="flex justify-center mt-4">
+      <div className="mt-4">
         <button
           type="button"
           onClick={save}
           disabled={isPending}
-          className="rounded-full bg-emerald-500 px-8 py-2.5 font-medium text-black shadow-lg shadow-emerald-500/20 hover:bg-emerald-400 hover:scale-105 transition-all disabled:opacity-40 disabled:hover:scale-100"
+          className="w-full rounded-xl bg-emerald-500 py-3 text-sm font-semibold text-black shadow-lg shadow-emerald-500/20 hover:bg-emerald-400 transition-all disabled:opacity-40"
         >
-          Guardar
+          {isPending ? "Guardando…" : "Guardar cambios"}
         </button>
       </div>
 

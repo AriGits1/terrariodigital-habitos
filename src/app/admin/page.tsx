@@ -34,19 +34,19 @@ export default async function AdminPage(props: {
     <main className="min-h-screen bg-gradient-to-b from-zinc-900 to-emerald-950 p-6 text-white">
       <header className="mx-auto mb-8 flex max-w-3xl items-center justify-between">
         <Link href="/" className="text-sm text-white/60 hover:text-white">
-          ← Back to terrarium
+          ← Volver al terrario
         </Link>
-        <h1 className="text-xl font-semibold">Admin — User Management</h1>
+        <h1 className="text-xl font-semibold">Admin — Gestión de usuarios</h1>
       </header>
 
       <div className="mx-auto max-w-3xl flex flex-col gap-8">
         {/* Create user form */}
         <section className="rounded-2xl bg-white/5 p-6 ring-1 ring-white/10">
-          <h2 className="mb-4 text-lg font-semibold">Create user</h2>
+          <h2 className="mb-4 text-lg font-semibold">Crear usuario</h2>
 
           {successMsg && (
             <p className="mb-4 rounded-lg bg-emerald-500/20 px-4 py-2 text-sm text-emerald-300">
-              User created successfully.
+              Usuario creado exitosamente.
             </p>
           )}
           {errorMsg && (
@@ -59,7 +59,7 @@ export default async function AdminPage(props: {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="flex flex-col gap-1">
                 <label htmlFor="name" className="text-sm text-white/70">
-                  Name
+                  Nombre
                 </label>
                 <input
                   id="name"
@@ -88,7 +88,7 @@ export default async function AdminPage(props: {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="flex flex-col gap-1">
                 <label htmlFor="password" className="text-sm text-white/70">
-                  Initial password
+                  Contraseña inicial
                 </label>
                 <input
                   id="password"
@@ -101,7 +101,7 @@ export default async function AdminPage(props: {
               </div>
               <div className="flex flex-col gap-1">
                 <label htmlFor="role" className="text-sm text-white/70">
-                  Role
+                  Rol
                 </label>
                 <select
                   id="role"
@@ -109,8 +109,8 @@ export default async function AdminPage(props: {
                   defaultValue="user"
                   className="rounded-xl bg-white/10 px-4 py-2 text-white outline-none ring-1 ring-white/20 focus:ring-emerald-400"
                 >
-                  <option value="user">user</option>
-                  <option value="admin">admin</option>
+                  <option value="user">Usuario</option>
+                  <option value="admin">Admin</option>
                 </select>
               </div>
             </div>
@@ -119,7 +119,7 @@ export default async function AdminPage(props: {
               type="submit"
               className="mt-2 rounded-xl bg-emerald-500 py-2 font-semibold text-black transition hover:bg-emerald-400"
             >
-              Create user
+              Crear usuario
             </button>
           </form>
         </section>
@@ -127,16 +127,16 @@ export default async function AdminPage(props: {
         {/* User list */}
         <section className="rounded-2xl bg-white/5 p-6 ring-1 ring-white/10">
           <h2 className="mb-4 text-lg font-semibold">
-            Users ({users.length})
+            Usuarios ({users.length})
           </h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/10 text-white/50">
-                  <th className="pb-2 text-left font-medium">Name</th>
+                  <th className="pb-2 text-left font-medium">Nombre</th>
                   <th className="pb-2 text-left font-medium">Email</th>
-                  <th className="pb-2 text-left font-medium">Role</th>
-                  <th className="pb-2 text-left font-medium">Created</th>
+                  <th className="pb-2 text-left font-medium">Rol</th>
+                  <th className="pb-2 text-left font-medium">Creado</th>
                 </tr>
               </thead>
               <tbody>
@@ -154,7 +154,7 @@ export default async function AdminPage(props: {
                             : "bg-white/10 text-white/60"
                         }`}
                       >
-                        {u.role}
+                        {u.role === "admin" ? "Admin" : "Usuario"}
                       </span>
                     </td>
                     <td className="py-2 text-white/50">
@@ -165,7 +165,7 @@ export default async function AdminPage(props: {
                 {users.length === 0 && (
                   <tr>
                     <td colSpan={4} className="py-4 text-center text-white/40">
-                      No users yet.
+                      Sin usuarios todavía.
                     </td>
                   </tr>
                 )}

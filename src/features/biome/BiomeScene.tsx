@@ -20,7 +20,7 @@ import {
   type PlantPlacement,
 } from "./biome-logic";
 import { caudal, WATER_PACKS } from "./water-logic";
-import { buyWater, waterTheBiome } from "./water-actions";
+import { buyWater } from "./water-actions";
 import { getCurrentPhase, getPhaseColors, type DayPhase } from "./day-phase";
 import type { HabitView } from "@/features/habits/HabitsPanel";
 import type { BiomeDecoration } from "@/generated/prisma/client";
@@ -860,9 +860,6 @@ export default function BiomeScene({
   // Shared pending flag for water actions (buy / pour) to avoid double clicks.
   const [waterPending, setWaterPending] = useState(false);
 
-  // Default pour amount when watering the biome.
-  const WATER_POUR_AMOUNT = 10;
-
   // Build daysData including habit title for tooltips
   const daysData = useMemo(() => {
     const data: { dayIndex: number; habits: { id: string; title: string; weight: number; status: "completed" | "pending" | "failed" }[] }[] = [];
@@ -1326,36 +1323,6 @@ export default function BiomeScene({
         document.body
       )}
 
-      {/* Water control + balance display — positioned below the stats cards */}
-      {!readOnly && (
-        <div className="pointer-events-auto absolute top-[204px] left-4 z-40 flex items-center gap-2 rounded-2xl bg-black/60 px-3 py-2 backdrop-blur-md ring-1 ring-white/10 shadow-xl md:top-[228px] md:left-6">
-          <span className="flex items-center gap-1 text-xs font-semibold text-sky-300">
-            <Droplets className="h-4 w-4" />
-            {waterBalance}
-          </span>
-          <button
-            disabled={waterBalance <= 0 || waterPending}
-            onClick={async () => {
-              setWaterPending(true);
-              const res = await waterTheBiome(WATER_POUR_AMOUNT);
-              setWaterPending(false);
-              if (!res.success) {
-                alert(res.error || "Error al regar el bioma.");
-              } else {
-                router.refresh();
-              }
-            }}
-            className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-              waterBalance > 0 && !waterPending
-                ? "bg-sky-400 text-black hover:bg-sky-300"
-                : "bg-white/5 text-zinc-500 cursor-not-allowed"
-            }`}
-            title="Regar el bioma con tu agua"
-          >
-            Regar
-          </button>
-        </div>
-      )}
 
       {/* Control de hora del día (Simulador) */}
       {isAdmin && (

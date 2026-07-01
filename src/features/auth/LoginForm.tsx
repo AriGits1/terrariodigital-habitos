@@ -37,7 +37,7 @@ export default function LoginForm() {
           htmlFor="password"
           className="text-sm font-medium text-white/70"
         >
-          Password
+          Contraseña
         </label>
         <PasswordInputWithToggle
   		 id="password"
@@ -59,7 +59,7 @@ export default function LoginForm() {
         disabled={isPending}
         className="mt-2 rounded-xl bg-emerald-500 py-2 font-semibold text-black transition hover:bg-emerald-400 disabled:opacity-60"
       >
-        {isPending ? "Signing in…" : "Sign in"}
+        {isPending ? "Iniciando sesión…" : "Iniciar sesión"}
       </button>
     </form>
   );

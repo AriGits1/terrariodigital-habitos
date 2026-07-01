@@ -139,9 +139,9 @@ export default function PushNotificationToggle({ vapidPublicKey }: { vapidPublic
         <button
           onClick={handleSubscribe}
           disabled={loading}
-          className="w-full rounded-xl bg-emerald-600 py-3 text-sm font-semibold hover:bg-emerald-500 transition disabled:opacity-50"
+          className="rounded-xl bg-emerald-600/80 px-6 py-2.5 text-sm font-semibold hover:bg-emerald-500 transition disabled:opacity-50"
         >
-          {loading ? "Activando..." : "Activar Notificaciones"}
+          {loading ? "Activando…" : "Activar notificaciones"}
         </button>
       )}
     </div>

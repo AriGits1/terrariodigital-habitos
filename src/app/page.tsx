@@ -1,16 +1,17 @@
 import Link from "next/link";
-import { Mic, BarChart2, Wind, Settings, Shield, Users, Store } from "lucide-react";
+import { Mic, Bot, Settings, Shield, Users, Store } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 import type { BiomeType } from "@/features/biome/biome-logic";
 import { requireProfile } from "@/features/auth/guards";
 import HabitsPanel from "@/features/habits/HabitsPanel";
-import { getHabitsWithTodayStatus, getHabitSuggestions } from "@/features/habits/queries";
+import { getHabitsWithTodayStatus } from "@/features/habits/queries";
 import CoachModal from "@/features/coach/CoachModal";
 import { getAdaptiveHomeData } from "@/features/adaptation/state";
 import type { ModuleKey } from "@/features/adaptation/engine";
 
 import BiomeSceneWrapper from "@/features/biome/BiomeSceneWrapper";
+import WaterControl from "@/features/biome/WaterControl";
 import { maybeDecayBiome } from "@/features/habits/biome-decay";
 import { prisma } from "@/lib/db";
 import TourOverlay from "@/features/tour/TourOverlay";
@@ -22,11 +23,10 @@ const BIOME_LABELS: Record<BiomeType, string> = {
   zen: "Jardín Zen",
 };
 
-// Nav lookup map — keyed by ModuleKey so adaptive ordering can drive rendering.
-const NAV: Record<ModuleKey, { href: string; label: string; icon: LucideIcon }> = {
-  diario:      { href: "/diario",      label: "Diario",     icon: Mic },
-  analiticas:  { href: "/analiticas",  label: "Analíticas", icon: BarChart2 },
-  mindfulness: { href: "/mindfulness", label: "Respiración", icon: Wind },
+// Nav lookup map — only Diario remains in the main nav; Analíticas moved to Configuración,
+// Respiración accessible from Coach.
+const NAV: Partial<Record<ModuleKey, { href: string; label: string; icon: LucideIcon }>> = {
+  diario: { href: "/diario", label: "Diario", icon: Mic },
 };
 
 export default async function Home(props: {
@@ -46,10 +46,9 @@ export default async function Home(props: {
   // Parallel reads: habit query, adaptive home data and biome decay are independent.
   // maybeDecayBiome returns the up-to-date growth/health (writing to DB only when
   // the cached snapshot is from a previous calendar day).
-  const [habits, homeData, habitSuggestions, freshVitals, decorations, dbProfile] = await Promise.all([
+  const [habits, homeData, freshVitals, decorations, dbProfile] = await Promise.all([
     getHabitsWithTodayStatus(profile.id),
     getAdaptiveHomeData(profile.id),
-    getHabitSuggestions(profile.id),
     maybeDecayBiome(profile.id, biome ?? null),
     prisma.biomeDecoration.findMany({
       where: { profileId: profile.id },
@@ -65,12 +64,6 @@ export default async function Home(props: {
   const { growth, health } = freshVitals;
 
   const { moduleOrder, lowEngagement, adaptationReason } = homeData;
-
-  // Merge suggestions into habits for HabitsPanel
-  const habitsWithSuggestions = habits.map((h: any) => {
-    const s = habitSuggestions.get(h.id);
-    return s ? { ...h, suggestion: s.suggestion, suggestionReason: s.reason } : h;
-  });
 
   return (
     <main className="relative h-[100dvh] w-screen overflow-hidden">
@@ -105,8 +98,24 @@ export default async function Home(props: {
         </div>
 
         <nav data-tour="nav" className="pointer-events-auto flex flex-wrap gap-2">
+          {/* Coach — main action, always first and visually prominent */}
+          <Link
+            data-tour="coach"
+            href={showCoach ? "?" : "?coach=true"}
+            scroll={false}
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold text-white backdrop-blur-sm transition ring-1 md:px-4 md:py-1.5 md:text-sm ${
+              showCoach
+                ? "bg-blue-500 ring-blue-400/50"
+                : "bg-blue-600/50 hover:bg-blue-500/70 ring-blue-400/30"
+            }`}
+          >
+            <Bot className="h-3.5 w-3.5 md:h-4 md:w-4" />
+            Coach
+          </Link>
+
           {moduleOrder.map((k: ModuleKey) => {
             const item = NAV[k];
+            if (!item) return null;
             const hasLowEngagement = lowEngagement.has(k);
             return (
               <Link
@@ -182,9 +191,10 @@ export default async function Home(props: {
         </div>
       </header>
 
-      {/* Habits panel: bottom sheet on mobile, side panel on desktop. */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 p-3 md:inset-x-auto md:right-0 md:top-0 md:bottom-auto md:h-full md:p-6">
-        <HabitsPanel habits={habitsWithSuggestions} />
+      {/* Habits panel + water control: bottom sheet on mobile, side panel on desktop. */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 p-3 flex flex-col gap-3 md:inset-x-auto md:right-0 md:top-0 md:bottom-auto md:h-full md:p-6 md:justify-start">
+        <HabitsPanel habits={habits} />
+        <WaterControl waterBalance={dbProfile?.water ?? 0} />
       </div>
 
       {/* Coach Modal */}

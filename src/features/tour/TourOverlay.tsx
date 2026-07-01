@@ -28,14 +28,14 @@ const STEPS: TourStep[] = [
     id: "welcome",
     title: "¡Bienvenido a tu Terrario Digital! 🌿",
     description:
-      "Este es tu ecosistema vivo: cada hábito que completes hace crecer la flora. Si los abandonas, el bioma decae. Hagamos un tour rápido para que sepas qué hace cada parte.",
+      "Este es tu ecosistema vivo: cada hábito que completes hace crecer la flora. Si los abandonas, el bioma decae. Vamos a hacer un tour rápido para que conozcas qué hace cada parte.",
     target: null,
   },
   {
     id: "biome",
     title: "🌲 Tu Bioma 3D",
     description:
-      "El terreno 3D que ves detrás es tu bioma vivo. Sus árboles, flores o cactus crecen cuando completas hábitos y se marchitan si los abandonas. Puedes orbitar la cámara arrastrando con el mouse.",
+      "El terreno 3D que ves detrás es tu bioma vivo. Sus árboles, flores o cactus crecen cuando completas hábitos y se marchitan si los abandonas. Puedes orbitar la cámara arrastrando con el mouse o el dedo.",
     target: null,
   },
   {
@@ -51,7 +51,7 @@ const STEPS: TourStep[] = [
     id: "nav",
     title: "🧭 Navegación principal",
     description:
-      "Estos botones te llevan a las distintas secciones:\n• 🎤 Diario — registra tu estado de ánimo con voz o texto\n• 📈 Analíticas — gráficos de progreso semanal\n• 💨 Respiración — sesión de mindfulness con guía háptica\n• 🏪 Tienda — compra decoraciones con semillas",
+      "Estos botones te llevan a las distintas secciones:\n• 🤖 Coach — tu asistente de IA: sugiere hábitos, analiza tu progreso y te guía en ejercicios de respiración\n• 🎤 Diario — registra tu estado de ánimo con voz o texto\n• 🏪 Tienda — compra decoraciones y agua con tus semillas",
     target: "nav",
     pad: 10,
     tightBounds: true,
@@ -60,24 +60,24 @@ const STEPS: TourStep[] = [
     id: "habits",
     title: "✅ Panel de Hábitos",
     description:
-      "Aquí está tu lista de hábitos del día. Tilda cada uno al completarlo para ganar semillas 🌱 y hacer crecer el bioma. Puedes agregar hasta 5 hábitos activos y cerrarlo con la ✕ del header.",
+      "Aquí está tu lista de hábitos del día. Marca cada uno al completarlo: ganarás semillas 🌱 automáticamente y el bioma crecerá. Puedes agregar hasta 5 hábitos activos y cerrar el panel con la ✕.",
     target: "habits",
     pad: 12,
     tightBounds: true,
   },
   {
     id: "coach",
-    title: "🤖 Hablar con Coach",
+    title: "🤖 Coach — tu asistente principal",
     description:
-      "Este botón abre un chat con IA. El coach sabe qué hábitos tienes pendientes y a qué hora es, así que te da sugerencias concretas. ¡También puede agregar o eliminar hábitos por ti y recomendarte mindfulness!",
+      "El botón Coach está en la barra de navegación superior, siempre visible. Abre un chat con IA que conoce tus hábitos actuales y te da sugerencias concretas. Puede agregar o eliminar hábitos por ti y guiarte en respiración guiada.",
     target: "coach",
     pad: 10,
   },
   {
     id: "seeds",
-    title: "🌱 Semillas y Configuración",
+    title: "🌱 Semillas — tu moneda del juego",
     description:
-      "Las semillas son tu moneda. Las ganas completando hábitos. En Configuración encuentras: notificaciones push, ajustes del perfil y más. Desde el ⚙️ abajo a la derecha.",
+      "Las semillas las ganas marcando hábitos como completados — no se compran. Úsalas en la Tienda para comprar decoraciones para tu bioma o agua 💧 para regar el río.\n\nEl botón 💧 Regar aparece debajo de las tarjetas de stats cuando tienes agua disponible.",
     target: "settings",
     pad: 14,
   },
@@ -94,7 +94,7 @@ const STEPS: TourStep[] = [
     id: "done",
     title: "¡Listo para empezar! 🚀",
     description:
-      "Ya sabés todo lo básico. Empezá agregando tu primer hábito en el panel, o explorá el bioma rotando la cámara. Podés relanzar este tutorial con el botón ❓ junto al ⚙️ de configuración.",
+      "Ya conoces todo lo básico. Empieza agregando tu primer hábito en el panel, o explora el bioma rotando la cámara. Puedes volver a ver este tutorial con el botón ❓ junto al ⚙️ de configuración.",
     target: null,
   },
 ];
